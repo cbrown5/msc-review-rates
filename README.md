@@ -1,23 +1,123 @@
 # msc-review-rates
 
-## Research context 
+## TODO
+Up to the model-formulation.md section
 
-## Aims 
+### Scientific Context
 
-## Methodology
+The Marine Stewardship Council (MSC) requires fisheries to monitor fishing effort with a nominal 30% monitoring coverage rule. However, they haven't specified how that 30% should be distributed across the fleet. There's concern that fishing fleets may select their best 30% of vessels (those with low rates of bycatch) for monitoring, resulting in biased outcomes in terms of estimated bycatch rates versus actual rates.
 
-## Tech context
+The aim is to illustrate how different sampling strategies for monitoring tuna fisheries affects the estimated rates of catch and the ability to detect compliance events (false negative rates). We want to determine the optimal monitoring approach for accurate bycatch rates and compliance detection, which is likely to be 30% random allocation across all sets rather than structuring by trips or vessels.
 
-R packages etc...
+Different monitoring systems have different capabilities:
+- Electronic monitoring: Can potentially achieve 100% vessel coverage with random review of 30% of sets
+- Electronic monitoring: in practice there is less than 100% coverage, so gaming may occur where the 'best' 30% of vessels are picked to have cameras
+- Human observation: Typically covers whole trips (30% of trips) but is subject to potential gaming where vessels may select shorter trips or those with lower catch rates
 
-## Implementation plan
+### Model Formulation
 
-R workflow
+The model is split into two modules, a catch event model and a monitoring module. 
+Further details are in the file `model-formulation.md`
 
-## directory structure
+#### Catch event module 
 
+The simulation model resembles a generalized linear mixed effects model with these components:
 
-## Notes
+**Sampling Distribution:**
+- Common species: Poisson distribution
+- Rare species: Negative binomial
+- Very rare events: Binomial or zero-inflated distributions
 
+Each sample represents one fishing set (e.g., longline set, purse seine net).
 
-Okay, so your aim is to illustrate how different sampling strategies for monitoring of tuna fisheries affects the um affects the estimated rates of catch and also ability to detect compliance events so that would be false negatives rate of false negatives. And our simulation we divided into different components. It looks a lot like, hey, um generalized linear mixed effects model. So a sampling distribution will, on the left-hand side of the equation, will reflect the type of event we're modeling. So for instance, if it's a very common species, we could use a proson distribution to represent the distribution of catch events. If the rare species we could use negative binomial or really rare events, we could use binomial or zero inflated distributions. So each sample is going to represent one fishing set, which is nominally a long line set, but could also represent per se net or whatever, Tr true. And then the right-hand side of the equation will be broken into variance components that explain the different contributions of variants to catches on a single set. And so these components will be the residual variance, which just represents set level variability. trip variance, which represents strip level variability and a variance component for the vessel, individual vessel identity, which represents vessel level variability. Optionally, we could also add another variance component to explain company level variability for the fishing company. So that's how we monitor catch rates and so we want to sorry, that's how we simulate catch rates. So then what we want to do is simulate catch rates on the different contexts for these different variance components and the different types of distributions of sampling, so rare species where reds common species and so forth. So one simulate the range of cut rates, and that represents the real or you know, model simululator truth, then we're going to implement a modeling implement, sorry, a monitoring module. The monitoring module will decide how monitoring of catches is distributed across the fleets. and it will have a couple of parameters, a first parameter that can controls the total amount of monitoring. So what percentage of all fishing sets are monitored? And a second variable, which says how that monitoring is distributed, across different components of the fleet. So it might be it's distributed at random across sets. It could be distributed around across vessels and then in all sets of particular vessel are sampled or could be distributed at random across trips within vessels. And then I guess we actually would need another variable here that says within that class, so say you've monitored 30% of vessels, what percentage of trips and ses are you monitoring within that? So I guess help me figure out some sort of way, sensible way of encoding these different monitoring parameters. Once we've set up the base model, what we need to do is come up with a really sensible, clear and easy to use framework like code implementation framework It allows us to explore the sensitivity of estimated catch rates versus true simulated catch rates under different monitoring contexts. So ultimately, we want to come up with a range of different monitoring contexts, which may, for instance, say, be sampling 30% of trips or 30% of sets at random or 30% of vessels for random, and then exploring how that might bite our picture of what's happening in terms of the catch rate we estimate versus the true simulated catch rate. So that reminds me back to the model, actually. We have to add a bias parameter in where the monitoring, the interaction, I guess, between the way the monitoring is done and their variance components, and that interaction will represent a bias of monitoring towards vessels with higher or lower than average catch rates or bias of monitoring to towards trips with higher or lower than average catch rates. So yeah, there's an additional monitoring parameter there that represents an interaction between the trip level captures and the monitoring. So I think that describes the model pretty well. So so I actually take what I said about the model interaction between catch rates and monitoring and move that back up into the section about model formulation. And then we now can move on to the implementation. So the implementation of the code needs to be straightforward, so you can easily just mix up parameters and simulate different stories. because the idea here is not going to be to do a comprehensive sensitity analysis to all these parameters. We want to come up with a few archetypes or kind of like stories or narratives so we can simulate those and then tell a story around what's the impact of different monitoring decisions So about how we allocate monitoring across sets, trips or vessels? What's the impact of that on our bias in our catch rates? So I guess to start off with, we want a nice implementation in code. That means we can run a whole bunch of different scenarios or like basically different parameter sets, and then we can narrow down to say, three to six of those parameter sets that that present a range of different situations and outcomes that we can use as our narratives. So once we've done all that, then the next part, yeah, will be to run those simulations and identify the range of plausible outcomes and then depict from those three to six narratives. and then with those particular narratives to build a story around them. So I guess we'll want about one page on each narrative that describes the contexts, puts those parameter values into a real world context, shows the implications of different monitoring strategies for that real world context and then that presents a conclusion around, okay, what's the optimal way to allocate monitoring? And then moving towards the end, we'd like to provide overall recommendations on optimal ways of allocating monitoring. The bigger picture here to note perhaps up in the Amims is how the Marine Stewardship Council requires its fisheries to monitor a fishing effort. And so they've got this nominal 30% monitoring coverage rule, but what they haven't done is said how that 30% is spread. Excuse me, about 30% is spread across the fleet. So what we're concerned has happened is that the fishing fleets will pick for best 30% of vessels in terms of low rates of by cut and they'll just monitor those and that will then result in biased outcome in terms of what we think the batch rate is for the fishy versus what actually is. So we want to be building up a bigger picture around what's the optimum monitoring going to be for accurate bicap rates and accurate detection of compliance events, which is probably going to be 30% random allocation of monitoring across all sets rather than structuring that by trips or vessels.s a more context here is that with an electronic monitoring system, in theory, if you get hundred percent coverage of all vessels, then you can review 30% of sets at random and that's possible. Whereas for a human observation system, you can do 30% of trips because it's obviously easier to do whole trips. You can't really do random sets with a human, because that requires them being on every trip. So compare those two monitoring scenarios and another scenario, which is where you don't have a hundred percent coverage of electic monitoring on vessels, in which case you're 30% is going to be distributed across different vessels. And then the impact of that 30% being random versus the fleet picking that 30% to perhaps the ones with the the best operators. Likewise, for human observation, uh the festels are often gaming it so that they get the human observers onto the trips, the shortest or have the lowest catch rates and so the biased the catch data in that way. So the stories, the narratives, um we need to brainstorm some nice figure ideas for those that will be colorful, attractive and informative and potentially, you know, quite simple and high impact so that they can be included within graphic designs of, you know, like information sheets and that sort of thing so that these stories can be simplified down to be to be visually feeling catchy, but also quick to interpret and see and compelling, I guess would be the word. then in terms of the prompt engineering steps, first thing we need to do is structure these notes into different sections. So we want scientific context, aims, model, formulation, and parameters. Mod formulation parameters. Yeah. Aims, expected outcomes, brainstorming ideas for figures. And once we've done all that, them prompt engineering wise we need to plan the implementation. We'll be doing this in the R software. So we need a clear plan for implementing all of this and, you know, focusing on usability. So making the core functions to implement the model and the monitoring frameworks really straightforward to use, so it can easily rerun different scenarios. So it probably sets of functions that are intuitive and can be easily, uh, you know, you can easily modify the parameters to run different uh different parameter sets for the different narratives of monitoring, but also, you know, work in a very intuitive way so that it's not sort of obtuse to try and modify the parameters or remember which parameter has to go where in a function. So that would be the plan the implementation. Okay, once have planned the implementation, then can start implementing it in a series of steps. So there should be a um and then you know what, before we plan implementation, we also probably need to define some parameter files, so write a definition of what needs to go into those parameter files or different parameters that will be used in the model because that was stuff where I'm going to have to, as a human, go to the literature and get numbers. Okay. um Yep, so then we plan implementation. uh One thing we're going to want is plug and play distributions for the sampling distributions, um as well as as straightforward functions. So plan the implementation and that I guess the phases should be reading in a parameter set and running the model and then, you know, the visualisations. So it should be straightforwards. I guessing between one and three different scripts. We don't need to have a whole heap of different scripts, but do keep the script short modular don't make super long meascripts. So once I got the implementation planned and that then we can run the model and produce the figures and then these are going to need to go into reports. So in terms of prompt engineering, we'll need a phase where we take the generated figures and put them into reports. We'll use the R markdown framework for reporting because that, you know, easy easy to replicate and update and run rerun workflows with our markdown. So we have the figures interated directly into our markdown, but don't integrate the entire process flow into our markdown. We just want, you know, our markurn to be taking the final figures. Otherwise our markdown files become unwieldy. And then yet, once we have the mark down set up, what I'd like to do is generate like a large number, maybe 20 different. No, first, first we want like a sensitivity analysis. And then from that I'm imagining like a sensitivity plot that has different extremes. So we pick the different extreme parameter sets that give more extreme results and then interpret those as different narratives of different monitoring situations. and then from those we will write up like a one page marked down or can goal one R marked down, but one page per narrative describing like what happens and what it's a bad idea and then patch a final page with the summary. Yeah. so in terms of implementation, we're going to divide it into the planning step, the planning of the science step, the science aims, the implementation, planning step, then doing the actual implementation step and then the report writing step. You know what? In the report writing, actually, I'd like to add another figure, so can we use R to generate some figures that are conceptual figures that illustrate different sound designs are different problems with them. So I'm imagine it's just a figure with little colored dots on it and the little colored dots represent different types of vessels. then it will show how if we pick different sets of vessels for sampling with the monitoring systems that we will get different results in terms of catch rate compared to the the true catch rate. And that figure obviously should have the different variance components, so different colored dots could represent different sets within a vessel or different vessels or different trips within a vessel or different vessels within the fleet. And then, you know, we were spreading our sampling by 30% across different ways across those different groups and then showing like a what catch rate you'd get. Maybe it's like a figure with a you know, a simple figure with a fleet, different colors representing vessels and trips and then a few like circles around illustrating different sampling protocols and then like a little bargraph in the corner that shows what catch rate you' estimate. So a few figures like that could be helpful to illustrate the narratives and later on, I can give them to a graphic design and get them to make them pretty with, you know, real fizzing vessels and fish in those. Thanks.
+**Variance Components:**
+- Residual variance (set-level variability)
+- Trip variance (trip-level variability)
+- Vessel variance (vessel-level variability)
+- Optional: Company-level variability for fishing companies
+
+**Bias Parameters:**
+- Interaction between monitoring methods and variance components
+- Represents bias toward vessels/trips with higher or lower than average catch rates
+
+### Monitoring Module
+
+The monitoring module determines how monitoring of catches is distributed across the fleet with several parameters:
+
+**Parameters:**
+- Total amount of monitoring (percentage of fishing sets monitored)
+- Distribution of monitoring across fleet components
+- Coverage within selected units (percentage of trips/sets monitored within selected vessels)
+
+**Distribution Strategies:**
+- Random across sets
+- Random across vessels (all sets of particular vessels are sampled)
+- Random across trips within vessels
+
+### Implementation Plan
+
+The code implementation needs to be straightforward to easily simulate different scenarios:
+
+**Code Structure:**
+- Modular implementation with 1-3 different scripts
+- Keep scripts short and modular, not super long mega-scripts
+- Plug-and-play distributions for sampling
+
+**Parameter Files:**
+- Clear definition of parameters needed for the model
+- Parameters will require literature research to obtain values
+
+**Function Design:**
+- Intuitive, easy-to-use functions
+- Simple parameter modification for different scenarios
+- Functions that work in an intuitive way without obtuse parameter structures
+
+### Expected Outcomes
+
+The goal is not to do a comprehensive sensitivity analysis of all parameters, but to:
+- Run simulations with different parameter sets
+- Narrow down to 3-6 parameter sets that present a range of different situations
+- Develop narratives or "stories" around these parameter sets
+- Create one-page descriptions for each narrative that:
+  - Describes the context
+  - Puts parameter values into real-world context
+  - Shows implications of different monitoring strategies
+  - Presents conclusions about optimal monitoring allocation
+- Provide overall recommendations on optimal ways of allocating monitoring
+
+### Visualization Strategy
+
+Develop figures that are:
+- Colorful, attractive, and informative
+- Simple and high-impact
+- Suitable for information sheets
+- Visually appealing, quick to interpret, and compelling
+
+**Conceptual Figure Ideas:**
+- Figures with colored dots representing different types of vessels/trips/sets
+- Illustrations showing how different sampling approaches affect estimated catch rates
+- Simple figures showing a fleet with different colors for vessels/trips
+- Circles illustrating different sampling protocols
+- Bar graphs showing estimated catch rates
+- These could later be enhanced by graphic designers with realistic fishing vessels and fish
+
+### Workflow
+
+The implementation will be divided into phases:
+
+**1. Planning Phase:**
+- Structure notes into sections (scientific context, aims, model formulation, etc.)
+- Define parameters and research literature values
+
+**2. Implementation Phase:**
+- Develop R code with focus on usability
+- Create core functions for model and monitoring frameworks
+- Implement in phases: reading parameter sets, running the model, visualizations
+
+**3. Reporting Phase:**
+- Generate figures
+- Use R Markdown for reporting (easy to replicate and update)
+- Integrate figures directly into R Markdown without including entire process flow
+- Conduct sensitivity analysis to identify extreme parameter sets
+- Create one page per narrative describing outcomes
+- Add a summary page with overall recommendations
