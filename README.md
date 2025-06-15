@@ -1,7 +1,11 @@
 # msc-review-rates
 
 ## TODO
-Up to the model-formulation.md section
+The code works ok. 
+Need to check logic in each step. 
+Need to decide if sampling is needed for trips and sets per vessel, or if to fix these? Maybe use Sols data to decide. 
+Then run to make plots to see if they make sense
+Then update parameters
 
 ### Scientific Context
 

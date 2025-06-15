@@ -1,0 +1,43 @@
+{
+  "simulation_parameters": {
+    "n_simulations": 100,
+    "seed": 12345,
+    "fleet_size": {
+      "vessels": 50,
+      "trips_per_vessel": 8,
+      "sets_per_trip": 6
+    }
+  },
+  "catch_model_parameters": {
+    "species": [
+      {
+        "name": "Common_Tuna",
+        "distribution": "poisson",
+        "beta0": 2.5,
+        "sigma2_vessel": 0.2,
+        "sigma2_trip": 0.15,
+        "sigma2_residual": 0.1,
+        "phi": 1,
+        "n_trials": 100
+      },
+      {
+        "name": "Rare_Shark",
+        "distribution": "negative_binomial",
+        "beta0": 0.5,
+        "sigma2_vessel": 0.3,
+        "sigma2_trip": 0.2,
+        "sigma2_residual": 0.15,
+        "phi": 1.5,
+        "n_trials": 100
+      }
+    ]
+  },
+  "monitoring_parameters": {
+    "coverage_percentage": 30,
+    "strategy": "random_sets",
+    "bias_parameters": {
+      "delta_monitoring": 0.5,
+      "gamma_selection": 0
+    }
+  }
+}
