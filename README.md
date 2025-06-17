@@ -1,8 +1,8 @@
 # msc-review-rates
 
 ## TODO
-Why is vessel bias not having an impact? look into this. 
-
+CB: Why is vessel bias not having an impact? look into this. 
+Update model for simulating sets per trip? 
 
 ### Scientific Context
 
@@ -21,7 +21,9 @@ The model is split into two modules, a catch event model and a monitoring module
 Further details are in the file `model-formulation.md`
 Used FSM as this had the most reliable data in logbooks. 
 
-#### Parameters
+#### Parameter calculations 
+
+Parameters were calculated from a longline tuna fleet. Note that below I assume sets per trip are negative binomially distributed. However data indicated an unusual peaked distribution with high dispersion. 
 
 See `tuna-bycatch-study/fleet-parameters-msc-analysis.R` for calculation of parameters from real data. 
 Note that the distribution of sets per trip is odd, more peaked than a negbin, but also with long tails. Using negbin for now. 
@@ -65,9 +67,9 @@ for (v in 1:V){ # for each vessel
 - `y[v,t,s]`: Observed catch for set s on trip t of vessel v, following a negative binomial distribution
 - `theta`: Dispersion parameter for the negative binomial distribution of catch, controlling overdispersion
 
-**Sampling Distribution:**
-- Typical species: Negative binomial
-- Very rare events or species: Binomial or zero-inflated distributions
+**Sampling Distributions:**
+- Catch per set: Negative binomial
+- Sets per trip and  trips per vessel: Negative binomial
 
 Each sample represents one fishing set (e.g., longline set, purse seine net).
 
@@ -141,70 +143,106 @@ bias = estimated_total_catch - true_total_catch
 bias_percent = bias / true_catch_rate * 100
 ```
 
-### Implementation Plan
+## Directory Structure and Script Usage
 
-The code implementation needs to be straightforward to easily simulate different scenarios:
+### Main Directories
 
-**Code Structure:**
-- Modular implementation with 1-3 different scripts
-- Keep scripts short and modular, not super long mega-scripts
-- Plug-and-play distributions for sampling
+- `/` - Root directory containing main R scripts and configuration files
+- `/outputs/` - Contains simulation results in CSV format
+- `/plots/` - Contains generated figures from the simulation results
+  - `/plots/lowres/` - Low-resolution versions of the plots
 
-**Parameter Files:**
-- Clear definition of parameters needed for the model
-- Parameters will require literature research to obtain values
+### Main Files
 
-**Function Design:**
-- Intuitive, easy-to-use functions
-- Simple parameter modification for different scenarios
-- Functions that work in an intuitive way without obtuse parameter structures
+#### R Scripts
 
-### Expected Outcomes
+1. **`1_run_simulations.R`**
+   - **Purpose**: Main script to run the full simulation with multiple parameter sets
+   - **Usage**: 
+     ```bash
+     Rscript 1_run_simulations.R
+     ```
+   - This script runs simulations for each parameter set defined in `parameters.csv`, with 250 replications per set. Results are saved to CSV files in the `/outputs/` directory.
 
-The goal is not to do a comprehensive sensitivity analysis of all parameters, but to:
-- Run simulations with different parameter sets
-- Narrow down to 3-6 parameter sets that present a range of different situations
-- Develop narratives or "stories" around these parameter sets
-- Create one-page descriptions for each narrative that:
-  - Describes the context
-  - Puts parameter values into real-world context
-  - Shows implications of different monitoring strategies
-  - Presents conclusions about optimal monitoring allocation
-- Provide overall recommendations on optimal ways of allocating monitoring
+2. **`2_plots.R`**
+   - **Purpose**: Creates visualizations of the simulation results
+   - **Usage**:
+     ```bash
+     Rscript 2_plots.R
+     ```
+   - Generates various plots showing bias in catch rate estimation across different monitoring strategies and saves them to the `/plots/` directory.
 
-### Visualization Strategy
+3. **`simulation_functions.R`**
+   - **Purpose**: Core functions for the simulation model
+   - **Usage**: Not run directly; imported by other scripts
+   - Contains functions for three modules:
+     - Catch event module - Simulates fleet structure and catches
+     - Monitoring module - Implements different monitoring strategies
+     - Catch statistic estimation - Calculates estimated vs true catch rates
 
-Develop figures that are:
-- Colorful, attractive, and informative
-- Simple and high-impact
-- Suitable for information sheets
-- Visually appealing, quick to interpret, and compelling
+4. **`quick_run_test.R`**
+   - **Purpose**: Quick test script for running a small simulation
+   - **Usage**:
+     ```bash
+     Rscript quick_run_test.R
+     ```
+   - Runs a small simulation with just 5 replications using the first parameter set for testing purposes.
 
-**Conceptual Figure Ideas:**
-- Figures with colored dots representing different types of vessels/trips/sets
-- Illustrations showing how different sampling approaches affect estimated catch rates
-- Simple figures showing a fleet with different colors for vessels/trips
-- Circles illustrating different sampling protocols
-- Bar graphs showing estimated catch rates
-- These could later be enhanced by graphic designers with realistic fishing vessels and fish
+5. **`test_single_run.R`**
+   - **Purpose**: Script to verify the monitoring functions work correctly
+   - **Usage**:
+     ```bash
+     Rscript test_single_run.R
+     ```
+   - Tests the functionality of a single simulation run using a specific parameter set.
 
-### Workflow
+6. **`conceptual_figure.R`**
+   - **Purpose**: Generates conceptual figures illustrating different monitoring strategies
+   - **Usage**:
+     ```bash
+     Rscript conceptual_figure.R
+     ```
+   - Creates visualizations that explain the conceptual framework of monitoring strategies.
 
-The implementation will be divided into phases:
+7. **`render-ms.R`**
+   - **Purpose**: Renders the R Markdown report into a Word document
+   - **Usage**:
+     ```bash
+     Rscript render-ms.R
+     ```
+   - Compiles `report.rmd` into `msc-review-rates-report.docx`.
 
-**1. Planning Phase:**
-- Structure notes into sections (scientific context, aims, model formulation, etc.)
-- Define parameters and research literature values
+#### Configuration and Data Files
 
-**2. Implementation Phase:**
-- Develop R code with focus on usability
-- Create core functions for model and monitoring frameworks
-- Implement in phases: reading parameter sets, running the model, visualizations
+1. **`parameters.csv`**
+   - Contains parameter sets for different simulation scenarios
+   - Each row represents a different parameter set with values for fleet size, trip frequency, catch rates, etc.
 
-**3. Reporting Phase:**
-- Generate figures
-- Use R Markdown for reporting (easy to replicate and update)
-- Integrate figures directly into R Markdown without including entire process flow
-- Conduct sensitivity analysis to identify extreme parameter sets
-- Create one page per narrative describing outcomes
-- Add a summary page with overall recommendations
+#### How to Run the Complete Workflow
+
+For a complete analysis workflow, run the scripts in the following order:
+
+1. First, run the simulations:
+   ```bash
+   Rscript 1_run_simulations.R
+   ```
+
+2. Next, generate the plots:
+   ```bash
+   Rscript 2_plots.R
+   ```
+
+3. Finally, render the report:
+   ```bash
+   Rscript render-ms.R
+   ```
+
+#### Output Files
+
+The simulation generates two main output files:
+
+1. `outputs/simulation_results_full_tidy.csv`: Complete simulation results with data for each replication
+2. `outputs/simulation_results_summary_tidy.csv`: Summary statistics across replications
+
+Various plots are saved to the `plots/` directory, showing different aspects of the simulation results.
+

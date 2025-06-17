@@ -11,7 +11,7 @@ source("simulation_functions.R")
 params_df <- read.csv("parameters.csv")
 
 # Number of replications
-n_replications <- 100
+n_replications <- 250
 
 # Initialize results storage
 all_results <- list()

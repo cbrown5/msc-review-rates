@@ -5,7 +5,7 @@
 library(tidyverse)
 library(ggplot2)
 library(gridExtra)
-
+library(ggthemes)
 theme_set(theme_classic())
 
 # Read simulation results
@@ -22,13 +22,30 @@ plot_bias <- ggplot(results_summary, aes(x = description, y = mean_bias, color =
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 plot_bias_percent <- ggplot(results_summary, aes(x = description, y = mean_bias_percent, color = strategy)) +
-  geom_point(size = 3, position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  geom_point(size = 3.5, position = position_dodge(width = 0.5)) +
   geom_errorbar(aes(ymin = lower_ci_mean_bias_percent, ymax = upper_ci_mean_bias_percent),
                 position = position_dodge(width = 0.5), width = 0.25) +
-  labs(title = "Percent Bias in Catch Rate Estimation by Monitoring Strategy",
-       x = "Parameter Set", y = "Percent Bias (%)", color = "Monitoring Strategy") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
+  labs(title = "Percent Bias in Catch Rate Estimation",
+       subtitle = "By Monitoring Strategy",
+       x = "", y = "Percent Bias (%)", color = "Monitoring Strategy") +
+  # scale_color_viridis_d() +  # Modern color palette
+  # theme_test() + 
+  # theme_fivethirtyeight()+
+  scale_color_canva() + 
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
+    axis.text.y = element_text(size = 14),
+    axis.title = element_text(size = 13, face = "bold"),
+    title = element_text(size = 14, face = "bold"),
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 14),
+    legend.position = "top",
+    plot.margin = margin(10, 10, 10, 15),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(1, "lines")
+  )
+plot_bias_percent
 
 # Plot 3: Distribution of bias for each parameter set
 plot_distribution <- function(param_id) {

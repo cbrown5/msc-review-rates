@@ -1,4 +1,2 @@
-rmarkdown::render("quality-stats-with-llm-manuscript.Rmd")
-
-
-rmarkdown::render("supplemental-examples.Rmd")
+rmarkdown::render("report.rmd",
+    output_file = "msc-review-rates-report.docx")

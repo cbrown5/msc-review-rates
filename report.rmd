@@ -1,6 +1,6 @@
 --- 
 title: "Impact of sampling bias on catch rate estimation"
-author: "CJ Brown (c.j.brown@utas.edu.au)"
+author: "CJ Brown (c.j.brown@utas.edu.au); The Nature Conservancy"
 date: "`r Sys.Date()`"
 description: |
   Analysis of catch rate estimation with biased sampling strategies
@@ -29,7 +29,7 @@ We created a computer simulation that modeled a realistic fishing fleet with:
 - Different numbers of fishing sets (individual fishing operations) per trip
 - Natural variation in catch rates between vessels, trips, and individual fishing sets
 
-The simulation was set-up to be representative of a Pacific long-line tuna fleet. 
+The simulation was set-up to be representative of a Pacific long-line tuna fleet (based on results in @brown2021electronic). 
 
 They then tested three different monitoring strategies:
 
@@ -96,3 +96,6 @@ While random monitoring might reveal higher bycatch rates initially, it provides
 This study demonstrates that **how** you monitor fishing activities is just as important as **how much** you monitor. Simply requiring 30% coverage isn't enough - the selection method matters enormously. Random selection across all fishing operations provides accurate estimates, while allowing strategic selection of "better" vessels or trips can severely bias results and undermine the goals of sustainable fisheries management.
 
 The research provides clear evidence that monitoring standards should specify not just coverage levels, but also require random selection to prevent gaming and ensure accurate assessment of fishing impacts.
+
+## References 
+
