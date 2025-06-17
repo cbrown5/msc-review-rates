@@ -1,0 +1,7 @@
+parameter_set_id,description,V,mu_trips,mu_sets,beta_0,sigma_x,sigma_z,tau,p_monitor,bias_v,bias_factor
+1,Baseline,50,10,5,2.0,0.3,0.2,1.0,0.3,0.0,0.0
+2,High vessel variance,50,10,5,2.0,0.8,0.2,1.0,0.3,0.0,0.0
+3,High trip variance,50,10,5,2.0,0.3,0.6,1.0,0.3,0.0,0.0
+4,High vessel bias,50,10,5,2.0,0.3,0.2,1.0,0.3,2.0,0.0
+5,High trip bias,50,10,5,2.0,0.3,0.2,1.0,0.3,0.0,2.0
+6,Rare events,50,10,5,0.5,0.3,0.2,3.0,0.3,0.0,0.0
