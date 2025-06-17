@@ -1,5 +1,5 @@
-# MSC Review Rates Simulation - Simulation Runner
-# This script runs the simulations for each parameter set and saves the results
+# MSC Review Rates Simulation - Tidy Simulation Runner
+# This script runs the simulations for each parameter set using the new tidy functions
 
 # Load required libraries
 library(tidyverse)
@@ -11,7 +11,7 @@ source("simulation_functions.R")
 params_df <- read.csv("parameters.csv")
 
 # Number of replications
-n_replications <- 1000
+n_replications <- 100
 
 # Initialize results storage
 all_results <- list()
@@ -33,8 +33,8 @@ for (i in 1:nrow(params_df)) {
       cat("  Replication", rep, "of", n_replications, "\n")
     }
     
-    # Run single simulation
-    param_results[[rep]] <- run_single_simulation(params, rep)
+    # Run single simulation with tidy implementation
+    param_results[[rep]] <- run_single_simulation_tidy(params, rep)
   }
   
   # Combine results for all replications
@@ -48,8 +48,10 @@ for (i in 1:nrow(params_df)) {
       mean_true_rate = mean(true_catch_rate, na.rm = TRUE),
       mean_bias = mean(bias, na.rm = TRUE),
       mean_bias_percent = mean(bias_percent, na.rm = TRUE),
-      lower_ci = quantile(estimated_catch_rate, 0.025, na.rm = TRUE),
-      upper_ci = quantile(estimated_catch_rate, 0.975, na.rm = TRUE),
+      lower_ci_mean_bias = quantile(bias, 0.025, na.rm = TRUE),
+      upper_ci_mean_bias = quantile(bias, 0.975, na.rm = TRUE),
+      lower_ci_mean_bias_percent = quantile(bias_percent, 0.025, na.rm = TRUE),
+      upper_ci_mean_bias_percent = quantile(bias_percent, 0.975, na.rm = TRUE),
       .groups = "drop"
     )
   
@@ -62,8 +64,8 @@ for (i in 1:nrow(params_df)) {
 all_results_df <- do.call(rbind, all_results)
 summary_results_df <- do.call(rbind, summary_results)
 
-# Save results
-write.csv(all_results_df, "simulation_results_full.csv", row.names = FALSE)
-write.csv(summary_results_df, "simulation_results_summary.csv", row.names = FALSE)
+# Save results (with tidy suffix to distinguish from original implementation)
+write.csv(all_results_df, "outputs/simulation_results_full_tidy.csv", row.names = FALSE)
+write.csv(summary_results_df, "outputs/simulation_results_summary_tidy.csv", row.names = FALSE)
 
-cat("Simulations complete. Results saved to CSV files.\n")
+cat("Simulations complete. Tidy results saved to CSV files.\n")

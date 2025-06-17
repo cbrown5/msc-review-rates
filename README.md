@@ -1,8 +1,8 @@
 # msc-review-rates
 
 ## TODO
-Up to implementing the model. I'm happy with formulation below
-One tihng to check is that the selection for monitoring is properly centered so that the proportion selected is close to the target proportion.
+Why is vessel bias not having an impact? look into this. 
+
 
 ### Scientific Context
 
@@ -19,23 +19,29 @@ Different monitoring systems have different capabilities:
 
 The model is split into two modules, a catch event model and a monitoring module. 
 Further details are in the file `model-formulation.md`
+Used FSM as this had the most reliable data in logbooks. 
+
+#### Parameters
+
+See `tuna-bycatch-study/fleet-parameters-msc-analysis.R` for calculation of parameters from real data. 
+Note that the distribution of sets per trip is odd, more peaked than a negbin, but also with long tails. Using negbin for now. 
 
 #### Catch event module 
 
 The model was formulated as follows: 
 ```
 for (v in 1:V){ # for each vessel
-  T[v] ~ dpois(mu_trips) #sample number of trips in a year
+  T[v] ~ dnegbin(mu_trips, theta_trip) #sample number of trips in a year
   x[v] ~ dnorm(0, sigma_x^(-2)) # sample vessel level RE
   
   for (t in 1:T[v]){ # for each trip this vessel did
-    S[v,t] ~ dpois(mu_sets) #sample number of sets on the trip 
+    S[v,t] ~ dnegbin(mu_sets, theta_sets) #sample number of sets on the trip 
     z[v,t] ~ dnorm(0, sigma_z^(-2)) # sample trip level random effect 
 
     mu[v,t] = beta_0 + z[v,t] + x[v] #calculate expected catch rate
 
     for (s in 1:S[v,t]){ # for each set
-      y[v,t,s] ~ dnegbin(mu[v,t], tau) # sample catch for this set tau is the dispersion parameter
+      y[v,t,s] ~ dnegbin(mu[v,t], theta) # sample catch for this set theta is the dispersion parameter
     }
   }
 }
@@ -44,18 +50,20 @@ for (v in 1:V){ # for each vessel
 
 **Parameter Explanations:**
 - `V`: Total number of vessels in the fleet
-- `T[v]`: Number of trips taken by vessel v in a year, sampled from a Poisson distribution
+- `T[v]`: Number of trips taken by vessel v in a year, sampled from a negative binomial distribution
 - `mu_trips`: Expected number of trips per vessel per year
+- `theta_trips`: Dispersion parameter for the negative binomial distribution of trips
 - `x[v]`: Vessel-level random effect for vessel v, sampled from a normal distribution
 - `sigma_x`: Standard deviation parameter for the vessel-level random effects
-- `S[v,t]`: Number of fishing sets on trip t of vessel v, sampled from a Poisson distribution
+- `S[v,t]`: Number of fishing sets on trip t of vessel v, sampled from a negative binomial distribution
 - `mu_sets`: Expected number of sets per trip
+- `theta_sets`: Dispersion parameter for the negative binomial distribution of sets
 - `z[v,t]`: Trip-level random effect for trip t of vessel v, sampled from a normal distribution
 - `sigma_z`: Standard deviation parameter for the trip-level random effects
 - `mu[v,t]`: Expected catch rate for trip t of vessel v, combining fixed effect (beta_0) and random effects
 - `beta_0`: Baseline expected catch rate (fixed effect)
 - `y[v,t,s]`: Observed catch for set s on trip t of vessel v, following a negative binomial distribution
-- `tau`: Dispersion parameter for the negative binomial distribution, controlling overdispersion
+- `theta`: Dispersion parameter for the negative binomial distribution of catch, controlling overdispersion
 
 **Sampling Distribution:**
 - Typical species: Negative binomial
@@ -101,7 +109,6 @@ M_trips[v,t,s] ~ dbern(inverse_logit(phi_trips[v,t,s]))
      
 ```
 
-**Parameter Explanations:**
 **Parameter Explanations:**
 - `M_sets`, `M_vessels`, `M_trips`: Matrices indicating monitoring status for each set under different strategies (1 = monitored, 0 = not monitored)
 - `p_monitor`: Base proportion of sets to be monitored (e.g., 0.3 for 30% coverage)

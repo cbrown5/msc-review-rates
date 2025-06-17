@@ -4,24 +4,142 @@
 # 2. Monitoring module
 # 3. Catch statistic estimation
 
+#' Generate fleet structure, random effects and simulated catches in a single function
+#' @param params List of parameters
+#' @param rep Replication number for this simulation
+#' @return Dataframe containing tidy format catch data
+simulate_fleet_catches <- function(params, rep = 1) {
+  # --- FLEET STRUCTURE GENERATION ---
+  # Extract parameters
+  V <- params$V  # Number of vessels
+  mu_trips <- params$mu_trips  # Expected number of trips per vessel
+  mu_sets <- params$mu_sets  # Expected number of sets per trip
+  sigma_x <- params$sigma_x  # SD for vessel-level random effects
+  sigma_z <- params$sigma_z  # SD for trip-level random effects
+  beta_0 <- params$beta_0  # Baseline expected catch rate
+  theta <- params$theta  # Dispersion parameter for negative binomial
+  theta_trips <- params$theta_trips  # Dispersion parameter for number of trips
+  theta_sets <- params$theta_sets  # Dispersion parameter for number of sets
+  
+  # Generate number of trips for each vessel using negative binomial
+  T_vec <- MASS::rnegbin(V, mu_trips, theta_trips)
+  # Ensure at least one trip per vessel
+    T_vec[T_vec < 1] <- 1
+
+  # Initialize list to store number of sets for each trip of each vessel
+  S_list <- list()
+  
+  # Generate number of sets for each trip using negative binomial
+  for (v in 1:V) {
+    S_list[[v]] <- MASS::rnegbin(T_vec[v], mu_sets, theta_sets)
+    # Ensure at least one set per trip
+    S_list[[v]][S_list[[v]] < 1] <- 1
+  }
+  
+  # --- RANDOM EFFECTS GENERATION ---
+  # Generate vessel-level random effects
+  x_vec <- rnorm(V, 0, sigma_x)
+  
+  # Initialize list to store trip-level random effects
+  z_list <- list()
+  
+  # Generate trip-level random effects
+  for (v in 1:V) {
+    z_list[[v]] <- rnorm(T_vec[v], 0, sigma_z)
+  }
+  
+  # --- CATCH SIMULATION ---
+  # Initialize a data frame to store the results in tidy format
+  max_rows <- sum(sapply(S_list, sum))  # Calculate total number of sets
+  catches_df <- data.frame(
+    replication = integer(max_rows),
+    vessel_id = integer(max_rows),
+    trip_id = integer(max_rows),
+    set_id = integer(max_rows),
+    vessel_effect = numeric(max_rows),
+    trip_effect = numeric(max_rows),
+    expected_catch_rate = numeric(max_rows),
+    catch = integer(max_rows),
+    stringsAsFactors = FALSE
+  )
+  
+  # Fill the data frame with simulated data
+  row_index <- 1
+  for (v in 1:V) {
+    for (t in 1:T_vec[v]) {
+      # Calculate expected catch rate for this trip
+      mu_vt <- exp(beta_0 + x_vec[v] + z_list[[v]][t])
+      
+      # Simulate catches using negative binomial distribution with MASS::rnegbin
+      # Only simulate if we have sets for this trip (S_list[[v]][t] could be 0)
+      if (S_list[[v]][t] > 0) {
+        catches <- MASS::rnegbin(S_list[[v]][t], mu_vt, theta)
+        
+        # Add to the data frame
+        # Calculate row indices for this trip's sets
+        rows <- row_index:(row_index + S_list[[v]][t] - 1)
+        
+        # Assign values in a vectorized way
+        catches_df$replication[rows] <- rep
+        catches_df$vessel_id[rows] <- v
+        catches_df$trip_id[rows] <- t
+        catches_df$set_id[rows] <- 1:S_list[[v]][t]
+        catches_df$vessel_effect[rows] <- x_vec[v]
+        catches_df$trip_effect[rows] <- z_list[[v]][t]
+        catches_df$expected_catch_rate[rows] <- mu_vt
+        catches_df$catch[rows] <- catches
+        
+        # Update row index
+        row_index <- row_index + S_list[[v]][t]
+      }
+    }
+  }
+
+
+  # Trim the data frame to the actual number of rows used
+  catches_df <- catches_df[1:(row_index-1), ]
+  
+  # Also return the fleet structure and random effects for backward compatibility
+  fleet_structure <- list(
+    V = V,
+    T = T_vec,
+    S = S_list
+  )
+  
+  random_effects <- list(
+    x = x_vec,
+    z = z_list
+  )
+  
+  # Return all data
+  return(list(
+    catches_df = catches_df,           # New tidy format
+    fleet_structure = fleet_structure, # For backward compatibility
+    random_effects = random_effects    # For backward compatibility
+  ))
+}
+
 #' Generate fleet structure (vessels, trips, sets)
 #' @param params List of parameters
 #' @return List containing fleet structure information
+#' @deprecated Use simulate_fleet_catches instead
 generate_fleet_structure <- function(params) {
   # Extract parameters
   V <- params$V  # Number of vessels
   mu_trips <- params$mu_trips  # Expected number of trips per vessel
   mu_sets <- params$mu_sets  # Expected number of sets per trip
+  theta_trips <- params$theta_trips  # Dispersion parameter for number of trips
+  theta_sets <- params$theta_sets  # Dispersion parameter for number of sets
   
-  # Generate number of trips for each vessel
-  T <- rpois(V, mu_trips)
+  # Generate number of trips for each vessel using negative binomial
+  T <- MASS::rnegbin(V, mu_trips, theta_trips)
   
   # Initialize list to store number of sets for each trip of each vessel
   S <- list()
   
-  # Generate number of sets for each trip
+  # Generate number of sets for each trip using negative binomial
   for (v in 1:V) {
-    S[[v]] <- rpois(T[v], mu_sets)
+    S[[v]] <- MASS::rnegbin(T[v], mu_sets, theta_sets)
   }
   
   # Return structured data
@@ -36,6 +154,7 @@ generate_fleet_structure <- function(params) {
 #' @param params List of parameters
 #' @param fleet_structure Fleet structure from generate_fleet_structure()
 #' @return List containing random effects
+#' @deprecated Use simulate_fleet_catches instead
 generate_random_effects <- function(params, fleet_structure) {
   # Extract parameters
   V <- fleet_structure$V  # Number of vessels
@@ -66,13 +185,14 @@ generate_random_effects <- function(params, fleet_structure) {
 #' @param fleet_structure Fleet structure
 #' @param random_effects Random effects
 #' @return List containing catches and expected catch rates
+#' @deprecated Use simulate_fleet_catches instead
 simulate_catches <- function(params, fleet_structure, random_effects) {
   # Extract parameters
   V <- fleet_structure$V  # Number of vessels
   T <- fleet_structure$T  # Number of trips per vessel
   S <- fleet_structure$S  # Number of sets per trip
   beta_0 <- params$beta_0  # Baseline expected catch rate
-  tau <- params$tau  # Dispersion parameter for negative binomial
+  theta <- params$theta  # Dispersion parameter for negative binomial
   
   # Extract random effects
   x <- random_effects$x  # Vessel-level random effects
@@ -92,13 +212,8 @@ simulate_catches <- function(params, fleet_structure, random_effects) {
       mu_vt <- exp(beta_0 + x[v] + z[[v]][t])
       mu[[v]][[t]] <- rep(mu_vt, S[[v]][t])
       
-      # Simulate catches using negative binomial distribution
-      # For negative binomial, we need size (dispersion) and prob parameters
-      # Convert mu and tau to size and prob
-      size <- tau
-      prob <- size / (size + mu_vt)
-      
-      y[[v]][[t]] <- rnbinom(S[[v]][t], size = size, prob = prob)
+      # Simulate catches using negative binomial distribution with MASS::rnegbin
+      y[[v]][[t]] <- MASS::rnegbin(S[[v]][t], mu_vt, theta)
     }
   }
   
@@ -109,152 +224,95 @@ simulate_catches <- function(params, fleet_structure, random_effects) {
   ))
 }
 
-#' Apply random monitoring across sets
-#' @param params List of parameters
-#' @param fleet_structure Fleet structure
-#' @param catches Array of catches
-#' @param random_effects Random effects
-#' @return List containing monitoring status
-apply_set_monitoring <- function(params, fleet_structure, catches, random_effects) {
-  # Extract parameters
-  V <- fleet_structure$V  # Number of vessels
-  T <- fleet_structure$T  # Number of trips per vessel
-  S <- fleet_structure$S  # Number of sets per trip
-  p_monitor <- params$p_monitor  # Proportion of sets to be monitored
+# --- TIDY MONITORING FUNCTIONS ---
+
+#' Apply random monitoring across sets using tidy format
+#' @param catches_df Tidy dataframe of catches
+#' @param p_monitor Proportion of sets to be monitored
+#' @return Dataframe with monitoring status added
+apply_set_monitoring_tidy <- function(catches_df, p_monitor) {
+  # Generate random monitoring status for each set
+  set.seed(42)  # For reproducibility
+  catches_df$monitored <- rbinom(nrow(catches_df), 1, p_monitor)
+  catches_df$strategy <- "sets"
   
-  # Initialize list to store monitoring status
-  M <- list()
-  
-  # Apply random monitoring across all sets
-  for (v in 1:V) {
-    M[[v]] <- list()
-    
-    for (t in 1:T[v]) {
-      # Generate random monitoring status for each set
-      M[[v]][[t]] <- rbinom(S[[v]][t], 1, p_monitor)
-    }
-  }
-  
-  # Return monitoring matrix
-  return(list(
-    M = M,  # Monitoring status
-    strategy = "sets"  # Strategy name
-  ))
+  return(catches_df)
 }
 
-#' Apply vessel-based monitoring with potential bias
-#' @param params List of parameters
-#' @param fleet_structure Fleet structure
-#' @param catches Array of catches
-#' @param random_effects Random effects
-#' @return List containing monitoring status
-apply_vessel_monitoring <- function(params, fleet_structure, catches, random_effects) {
-  # Extract parameters
-  V <- fleet_structure$V  # Number of vessels
-  T <- fleet_structure$T  # Number of trips per vessel
-  S <- fleet_structure$S  # Number of sets per trip
-  p_monitor <- params$p_monitor  # Proportion of sets to be monitored
-  bias_v <- params$bias_v  # Bias factor for vessel selection
+#' Apply vessel-based monitoring with potential bias using tidy format
+#' @param catches_df Tidy dataframe of catches
+#' @param p_monitor Proportion of sets to be monitored
+#' @param bias_v Bias factor for vessel selection
+#' @return Dataframe with monitoring status added
+apply_vessel_monitoring_tidy <- function(catches_df, p_monitor, bias_v = 0) {
+  # Get unique vessels
+  vessels <- unique(catches_df$vessel_id)
   
-  # Extract random effects
-  x <- random_effects$x  # Vessel-level random effects
-  
-  # Initialize list to store monitoring status
-  M <- list()
+  # Get vessel random effects
+  vessel_effects <- sapply(vessels, function(v) {
+    unique(catches_df$vessel_effect[catches_df$vessel_id == v])[1]
+  })
   
   # Calculate probability of monitoring for each vessel with bias
-  phi_vessels <- plogis(qlogis(p_monitor) + bias_v * x)
+  phi_vessels <- plogis(qlogis(p_monitor) + bias_v * vessel_effects)
   
   # Select vessels for monitoring based on biased probabilities
-  vessel_monitored <- rbinom(V, 1, phi_vessels)
+  set.seed(42)  # For reproducibility
+  vessel_monitored <- rbinom(length(vessels), 1, phi_vessels)
+  names(vessel_monitored) <- vessels
   
-  # Apply monitoring to all sets of selected vessels
-  for (v in 1:V) {
-    M[[v]] <- list()
-    
-    for (t in 1:T[v]) {
-      # If vessel is selected, monitor all sets
-      M[[v]][[t]] <- rep(vessel_monitored[v], S[[v]][t])
-    }
-  }
+  # Apply monitoring status to each row based on vessel
+  catches_df$monitored <- sapply(catches_df$vessel_id, function(v) {
+    vessel_monitored[as.character(v)]
+  })
   
-  # Return monitoring matrix
-  return(list(
-    M = M,  # Monitoring status
-    strategy = "vessels"  # Strategy name
-  ))
+  catches_df$strategy <- "vessels"
+  
+  return(catches_df)
 }
 
-#' Apply trip-based monitoring with potential bias
-#' @param params List of parameters
-#' @param fleet_structure Fleet structure
-#' @param catches Array of catches
-#' @param random_effects Random effects
-#' @return List containing monitoring status
-apply_trip_monitoring <- function(params, fleet_structure, catches, random_effects) {
-  # Extract parameters
-  V <- fleet_structure$V  # Number of vessels
-  T <- fleet_structure$T  # Number of trips per vessel
-  S <- fleet_structure$S  # Number of sets per trip
-  p_monitor <- params$p_monitor  # Proportion of sets to be monitored
-  bias_factor <- params$bias_factor  # Bias factor for trip selection
+#' Apply trip-based monitoring with potential bias using tidy format
+#' @param catches_df Tidy dataframe of catches
+#' @param p_monitor Proportion of sets to be monitored
+#' @param bias_factor Bias factor for trip selection
+#' @return Dataframe with monitoring status added
+apply_trip_monitoring_tidy <- function(catches_df, p_monitor, bias_factor = 0) {
+  # Create a dataframe of unique vessel-trip combinations with their trip effects
+  trips <- unique(catches_df[, c("vessel_id", "trip_id", "trip_effect")])
   
-  # Extract random effects
-  z <- random_effects$z  # Trip-level random effects
+  # Calculate probability of monitoring for each trip with bias
+  trips$phi_trip <- plogis(qlogis(p_monitor) + bias_factor * trips$trip_effect)
   
-  # Initialize list to store monitoring status
-  M <- list()
+  # Select trips for monitoring based on biased probabilities
+  set.seed(42)  # For reproducibility
+  trips$monitored <- rbinom(nrow(trips), 1, trips$phi_trip)
   
-  # Apply trip-based monitoring with bias based on trip random effects
-  for (v in 1:V) {
-    M[[v]] <- list()
-    
-    # Calculate probability of monitoring for each trip with bias
-    phi_trips <- plogis(qlogis(p_monitor) + bias_factor * z[[v]])
-    
-    # Select trips for monitoring based on biased probabilities
-    trip_monitored <- rbinom(T[v], 1, phi_trips)
-    
-    for (t in 1:T[v]) {
-      # If trip is selected, monitor all sets
-      M[[v]][[t]] <- rep(trip_monitored[t], S[[v]][t])
-    }
+  # Merge monitoring status back to original dataframe
+  catches_df$monitored <- NA
+  for (i in 1:nrow(trips)) {
+    v <- trips$vessel_id[i]
+    t <- trips$trip_id[i]
+    m <- trips$monitored[i]
+    catches_df$monitored[catches_df$vessel_id == v & catches_df$trip_id == t] <- m
   }
   
-  # Return monitoring matrix
-  return(list(
-    M = M,  # Monitoring status
-    strategy = "trips"  # Strategy name
-  ))
+  catches_df$strategy <- "trips"
+  
+  return(catches_df)
 }
 
-#' Estimate catch statistics based on monitoring
-#' @param catches List of catches
-#' @param monitoring List of monitoring status
-#' @param fleet_structure Fleet structure
-#' @return List of statistics (estimated rate, true rate, bias, etc.)
-estimate_catch_statistics <- function(catches, monitoring, fleet_structure) {
-  # Extract data
-  y <- catches$y  # Catches
-  M <- monitoring$M  # Monitoring status
-  strategy <- monitoring$strategy  # Monitoring strategy
-  
-  # Initialize counters
-  total_catch <- 0
-  total_sets <- 0
-  monitored_catch <- 0
-  monitored_sets <- 0
+#' Estimate catch statistics from tidy dataframe
+#' @param catches_df Dataframe with catches and monitoring status
+#' @return List of statistics
+estimate_catch_statistics_tidy <- function(catches_df) {
+  # Get strategy name
+  strategy <- unique(catches_df$strategy)
   
   # Calculate totals
-  for (v in 1:length(y)) {
-    for (t in 1:length(y[[v]])) {
-      total_catch <- total_catch + sum(y[[v]][[t]])
-      total_sets <- total_sets + length(y[[v]][[t]])
-      
-      monitored_catch <- monitored_catch + sum(y[[v]][[t]] * M[[v]][[t]])
-      monitored_sets <- monitored_sets + sum(M[[v]][[t]])
-    }
-  }
+  total_catch <- sum(catches_df$catch)
+  total_sets <- nrow(catches_df)
+  monitored_catch <- sum(catches_df$catch[catches_df$monitored == 1])
+  monitored_sets <- sum(catches_df$monitored)
   
   # Calculate rates
   true_catch_rate <- total_catch / total_sets
@@ -284,29 +342,24 @@ estimate_catch_statistics <- function(catches, monitoring, fleet_structure) {
   ))
 }
 
-#' Run a single simulation
+#' Run a single simulation with tidy data structures
 #' @param params List of parameters
 #' @param rep Replication number
 #' @return Data frame with results
-run_single_simulation <- function(params, rep) {
-  # Generate fleet structure
-  fleet_structure <- generate_fleet_structure(params)
-  
-  # Generate random effects
-  random_effects <- generate_random_effects(params, fleet_structure)
-  
-  # Simulate catches
-  catches <- simulate_catches(params, fleet_structure, random_effects)
+run_single_simulation_tidy <- function(params, rep) {
+  # Generate fleet structure, random effects, and catches all in one step
+  sim_data <- simulate_fleet_catches(params, rep)
+  catches_df <- sim_data$catches_df
   
   # Apply monitoring strategies
-  monitoring_sets <- apply_set_monitoring(params, fleet_structure, catches, random_effects)
-  monitoring_vessels <- apply_vessel_monitoring(params, fleet_structure, catches, random_effects)
-  monitoring_trips <- apply_trip_monitoring(params, fleet_structure, catches, random_effects)
+  catches_set <- apply_set_monitoring_tidy(catches_df, params$p_monitor)
+  catches_vessel <- apply_vessel_monitoring_tidy(catches_df, params$p_monitor, params$bias_v)
+  catches_trip <- apply_trip_monitoring_tidy(catches_df, params$p_monitor, params$bias_factor)
   
   # Estimate catch statistics
-  stats_sets <- estimate_catch_statistics(catches, monitoring_sets, fleet_structure)
-  stats_vessels <- estimate_catch_statistics(catches, monitoring_vessels, fleet_structure)
-  stats_trips <- estimate_catch_statistics(catches, monitoring_trips, fleet_structure)
+  stats_sets <- estimate_catch_statistics_tidy(catches_set)
+  stats_vessels <- estimate_catch_statistics_tidy(catches_vessel)
+  stats_trips <- estimate_catch_statistics_tidy(catches_trip)
   
   # Combine results
   results <- data.frame(
@@ -330,6 +383,13 @@ run_single_simulation <- function(params, rep) {
     total_sets = c(stats_sets$total_sets, 
                  stats_vessels$total_sets, 
                  stats_trips$total_sets)
+  )
+  
+  # Add the tidy format dataframes for additional analysis if needed
+  attr(results, "tidy_data") <- list(
+    sets = catches_set,
+    vessels = catches_vessel,
+    trips = catches_trip
   )
   
   return(results)

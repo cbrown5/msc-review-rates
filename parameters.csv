@@ -1,7 +1,10 @@
-parameter_set_id,description,V,mu_trips,mu_sets,beta_0,sigma_x,sigma_z,tau,p_monitor,bias_v,bias_factor
-1,Baseline,50,10,5,2.0,0.3,0.2,1.0,0.3,0.0,0.0
-2,High vessel variance,50,10,5,2.0,0.8,0.2,1.0,0.3,0.0,0.0
-3,High trip variance,50,10,5,2.0,0.3,0.6,1.0,0.3,0.0,0.0
-4,High vessel bias,50,10,5,2.0,0.3,0.2,1.0,0.3,2.0,0.0
-5,High trip bias,50,10,5,2.0,0.3,0.2,1.0,0.3,0.0,2.0
-6,Rare events,50,10,5,0.5,0.3,0.2,3.0,0.3,0.0,0.0
+parameter_set_id,description,V,mu_trips,theta_trips,mu_sets,theta_sets,beta_0,sigma_x,sigma_z,theta,p_monitor,bias_v,bias_factor
+1,Baseline - YFT,50,10,1.13,26,1.8,5.6,0.41,0.67,0.42,0.3,0,0
+2,High vessel bias,50,10,1.13,26,1.8,5.6,0.41,0.67,0.42,0.3,-2,0
+3,High trip bias,50,10,1.13,26,1.8,5.6,0.41,0.67,0.42,0.3,0,-2
+4,High vessel variance + vessel bias,50,10,1.13,26,1.8,5.6,0.41,0.9,0.42,0.3,-2,0
+5,High trip variance + trip bias,50,10,1.13,26,1.8,5.6,0.8,0.67,0.42,0.3,0,-2
+6,Rare species + vessel bias,50,10,1.13,26,1.8,0.08,0.55,0.65,0.42,0.3,-2,0
+7,Very rare species+ vessel bias,50,10,1.13,26,1.8,0.008,0.55,0.65,0.42,0.3,-2,0
+8,Rare species + trip bias,50,10,1.13,26,1.8,0.08,0.55,0.65,0.42,0.3,0,-2
+9,Very rare species+ trip bias,50,10,1.13,26,1.8,0.008,0.55,0.65,0.42,0.3,0,-2
