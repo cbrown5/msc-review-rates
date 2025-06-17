@@ -1,11 +1,8 @@
 # msc-review-rates
 
 ## TODO
-The code works ok. 
-Need to check logic in each step. 
-Need to decide if sampling is needed for trips and sets per vessel, or if to fix these? Maybe use Sols data to decide. 
-Then run to make plots to see if they make sense
-Then update parameters
+Up to implementing the model. I'm happy with formulation below
+One tihng to check is that the selection for monitoring is properly centered so that the proportion selected is close to the target proportion.
 
 ### Scientific Context
 
@@ -25,38 +22,117 @@ Further details are in the file `model-formulation.md`
 
 #### Catch event module 
 
-The simulation model resembles a generalized linear mixed effects model with these components:
+The model was formulated as follows: 
+```
+for (v in 1:V){ # for each vessel
+  T[v] ~ dpois(mu_trips) #sample number of trips in a year
+  x[v] ~ dnorm(0, sigma_x^(-2)) # sample vessel level RE
+  
+  for (t in 1:T[v]){ # for each trip this vessel did
+    S[v,t] ~ dpois(mu_sets) #sample number of sets on the trip 
+    z[v,t] ~ dnorm(0, sigma_z^(-2)) # sample trip level random effect 
+
+    mu[v,t] = beta_0 + z[v,t] + x[v] #calculate expected catch rate
+
+    for (s in 1:S[v,t]){ # for each set
+      y[v,t,s] ~ dnegbin(mu[v,t], tau) # sample catch for this set tau is the dispersion parameter
+    }
+  }
+}
+
+```
+
+**Parameter Explanations:**
+- `V`: Total number of vessels in the fleet
+- `T[v]`: Number of trips taken by vessel v in a year, sampled from a Poisson distribution
+- `mu_trips`: Expected number of trips per vessel per year
+- `x[v]`: Vessel-level random effect for vessel v, sampled from a normal distribution
+- `sigma_x`: Standard deviation parameter for the vessel-level random effects
+- `S[v,t]`: Number of fishing sets on trip t of vessel v, sampled from a Poisson distribution
+- `mu_sets`: Expected number of sets per trip
+- `z[v,t]`: Trip-level random effect for trip t of vessel v, sampled from a normal distribution
+- `sigma_z`: Standard deviation parameter for the trip-level random effects
+- `mu[v,t]`: Expected catch rate for trip t of vessel v, combining fixed effect (beta_0) and random effects
+- `beta_0`: Baseline expected catch rate (fixed effect)
+- `y[v,t,s]`: Observed catch for set s on trip t of vessel v, following a negative binomial distribution
+- `tau`: Dispersion parameter for the negative binomial distribution, controlling overdispersion
 
 **Sampling Distribution:**
-- Common species: Poisson distribution
-- Rare species: Negative binomial
-- Very rare events: Binomial or zero-inflated distributions
+- Typical species: Negative binomial
+- Very rare events or species: Binomial or zero-inflated distributions
 
 Each sample represents one fishing set (e.g., longline set, purse seine net).
 
-**Variance Components:**
-- Residual variance (set-level variability)
-- Trip variance (trip-level variability)
-- Vessel variance (vessel-level variability)
-- Optional: Company-level variability for fishing companies
-
-**Bias Parameters:**
-- Interaction between monitoring methods and variance components
-- Represents bias toward vessels/trips with higher or lower than average catch rates
-
-### Monitoring Module
+#### Monitoring Module
 
 The monitoring module determines how monitoring of catches is distributed across the fleet with several parameters:
 
 **Parameters:**
 - Total amount of monitoring (percentage of fishing sets monitored)
-- Distribution of monitoring across fleet components
+- Distribution of monitoring across fleet components, with option for bias
 - Coverage within selected units (percentage of trips/sets monitored within selected vessels)
 
+The monitoring module was formulated as follows:
+
+```
+
+# Strategy 1 sampling across sets
+#matrix for storing monitoring status
+M_sets = matrix(V,T,S)
+phi_sets = logit(p_monitor)
+M_sets[v,t,s] ~ dbern(inverse_logit(phi))
+
+# Strategy 2 sampling random vessels
+M_vessels = matrix(V,T,S)
+phi_vessels = array(dim=c(V,T,S))
+for (v in 1:V) {
+  phi_vessels[v,,] = logit(p_monitor) + bias_v * x[v]
+}
+M_vessels[v,t,s] ~ dbern(inverse_logit(phi_vessels[v,t,s]))
+# Strategy 3: Random selection of trips within vessels
+M_trips = matrix(V,T,S)
+phi_trips = array(dim=c(V,T,S))
+for (v in 1:V) {
+  for (t in 1:T[v]) {
+    phi_trips[v,t,] = logit(p_monitor) + bias_factor * z[v,t]
+  }
+}
+M_trips[v,t,s] ~ dbern(inverse_logit(phi_trips[v,t,s]))
+     
+```
+
+**Parameter Explanations:**
+**Parameter Explanations:**
+- `M_sets`, `M_vessels`, `M_trips`: Matrices indicating monitoring status for each set under different strategies (1 = monitored, 0 = not monitored)
+- `p_monitor`: Base proportion of sets to be monitored (e.g., 0.3 for 30% coverage)
+- `phi_sets`, `phi_vessels`, `phi_trips`: Logit-transformed probabilities of monitoring for each strategy
+- `bias_v`: Bias factor for vessel-based selection (when > 0, vessels with lower catch rates are more likely selected)
+- `bias_factor`: Bias factor for trip-based selection (when > 0, trips with lower catch rates are more likely selected)
+- `x[v]`: Vessel-level random effect used in the bias mechanism for vessel selection
+- `z[v,t]`: Trip-level random effect used in the bias mechanism for trip selection
+
+**Bias Mechanism:**
+- When bias_factor > 0, vessels/trips with lower catch rates (negative random effects) are more likely to be selected
+- Higher bias_factor values lead to stronger selection bias
+- The bias operates through the vessel random effect (x[v]) or trip random effect (z[v,t]) depending on strategy
+- logit_inverse(x) = 1/(1+exp(-x)) transforms logit values back to probabilities
+
 **Distribution Strategies:**
-- Random across sets
-- Random across vessels (all sets of particular vessels are sampled)
-- Random across trips within vessels
+- Random across sets: Each set has equal probability of being monitored
+- Random across vessels: Selected vessels have all their sets monitored
+- Random across trips within vessels: Selected trips have all their sets monitored
+
+### Catch statistic estimation
+
+For a given monitoring strategy `M` and catch data `y`, the estimated catch rate per set can be calculated as follows:
+
+```
+# Apply monitoring to estimate catch rate
+estimated_catch_rate = sum(y[v,t,s] * M[v,t,s]) / sum(M[v,t,s]) 
+true_catch_rate = sum(y[v,t,s])/prod(dim(y))
+bias = estimated_total_catch - true_total_catch
+bias_percent = bias / true_catch_rate * 100
+```
 
 ### Implementation Plan
 
