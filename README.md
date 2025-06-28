@@ -3,8 +3,8 @@
 ## TODO
 CB: Why is vessel bias not having an impact? look into this. 
 Update model for simulating sets per trip? 
+Add technical annex to document. 
 
-make narratives that walk through each paramter set and pros and cons
 
 ### Scientific Context
 
