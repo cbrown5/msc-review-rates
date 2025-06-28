@@ -97,7 +97,7 @@ apply_monitoring_strategies <- function(data, p_monitor = 0.3, bias_factor = -5)
   # Strategy 1: Random sets
   set.seed(42)
   data_sets$monitored <- rbinom(nrow(data_sets), 1, p_monitor)
-  data_sets$strategy <- "Random Sets"
+  data_sets$strategy <- "random sets with 100% EM coverage"
   
   # Strategy 2: Vessels (with potential bias toward vessels with lower catch rates)
   vessels <- unique(data$vessel_id)
@@ -116,7 +116,7 @@ apply_monitoring_strategies <- function(data, p_monitor = 0.3, bias_factor = -5)
       data_vessels$monitored[data_vessels$vessel_id == vessels[i]] <- 1
     }
   }
-  data_vessels$strategy <- "Vessels"
+  data_vessels$strategy <-   "vessels with biased EM coverage"
   
   # Strategy 3: Trips (with potential bias toward trips with lower catch rates)
   trips <- unique(data[, c("vessel_id", "trip_id")])
@@ -144,7 +144,7 @@ apply_monitoring_strategies <- function(data, p_monitor = 0.3, bias_factor = -5)
       data_trips$monitored[data_trips$vessel_id == v & data_trips$trip_id == t] <- 1
     }
   }
-  data_trips$strategy <- "Trips"
+  data_trips$strategy <- "trips with human observers"
   
   # Combine all data
   combined_data <- rbind(data_sets, data_vessels, data_trips)
@@ -173,16 +173,18 @@ catch_stats <- calculate_catch_stats(monitored_data)
 # Create visualization functions
 
 # 1. Fleet Visualization with dots representing sets
-plot_fleet_structure <- function(data, strategy_name) {
-  subset_data <- data[data$strategy == strategy_name,]
+plot_fleet_structure <- function(data, strategy_name, colscale) {
+  subset_data <- data[data$strategy == strategy_name,] %>%
+    group_by(trip_id, vessel_id) %>%
+    summarize(catch = sum(catch), monitored = 100*sum(monitored)/n())
   
   ggplot(subset_data, aes(x = trip_id, y = vessel_id)) +
-    geom_point(aes(color = factor(monitored), size = catch), alpha = 0.8) +
-    scale_color_manual(values = c("0" = "#CCCCCC", "1" = "#FF5733"), 
-                       name = "Monitored", 
-                       labels = c("No", "Yes")) +
+    geom_point(aes(color = monitored, size = catch), alpha = 0.8) +
+    scale_color_gradientn(colors = colscale,
+               values = scales::rescale(c(0, 50, 100)),
+               name = "Monitored \n Sets (%)") +
     scale_size_continuous(name = "Catch Amount", range = c(3, 8)) +  # Increased point size range
-    labs(title = paste("Monitoring Strategy:", strategy_name),
+    labs(title = paste("Monitoring", strategy_name),
          x = "Trip Number", 
          y = "Vessel") + 
     scale_y_continuous(labels = function(x) paste("Vessel", LETTERS[x])) +
@@ -221,9 +223,19 @@ plot_bias <- function(stats) {
 }
 
 # Create the plots
-plot1 <- plot_fleet_structure(monitored_data, "Random Sets")
-plot2 <- plot_fleet_structure(monitored_data, "Vessels")
-plot3 <- plot_fleet_structure(monitored_data, "Trips")
+plot1 <- plot_fleet_structure(
+  monitored_data, 
+  "random sets with 100% EM coverage",
+  c("#fff5eb", "#fd8d3c", "#7f2704") # light to dark orange, good contrast on grey
+)
+plot2 <- plot_fleet_structure(monitored_data, "vessels with biased EM coverage",
+               c("#c6dbef", "#3182bd", "#08306b")) # light to dark blue, good contrast on grey
+plot3 <- plot_fleet_structure(
+  monitored_data, 
+  "trips with human observers",
+  c("#bae4b3", "#41ab5d", "#005a32") # medium to dark green, better contrast
+)
+
 plot4 <- plot_catch_comparison(catch_stats)
 plot5 <- plot_bias(catch_stats)
 
@@ -238,7 +250,8 @@ combined_plot <- combined_plot +
   )
 
 # Save the plot
-ggsave("plots/conceptual_figure.png", combined_plot, width = 12, height = 8, dpi = 300)
+ggsave("plots/conceptual_figure.png", 
+  combined_plot, width = 15, height = 8, dpi = 300)
 ggsave("plots/lowres/conceptual_figure_lowres.png", combined_plot, width = 12, height = 8, dpi = 100)
 
 # Also create a simpler conceptual figure just showing the different strategies
@@ -250,9 +263,12 @@ simple_plot <- (plot1 + plot2 + plot3) +
     caption = "Brighter dots represent monitored sets. Size and color indicate catch amount."
   )
 
+
 # Save the simple plot
-ggsave("plots/conceptual_figure_simple.png", simple_plot, width = 15, height = 5, dpi = 300)
-ggsave("plots/lowres/conceptual_figure_simple_lowres.png", simple_plot, width = 15, height = 5, dpi = 100)
+ggsave("plots/conceptual_figure_simple.png", 
+simple_plot, width = 18, height = 5, dpi = 300)
+ggsave("plots/lowres/conceptual_figure_simple_lowres.png", 
+simple_plot, width = 18, height = 5, dpi = 100)
 
 # Print summary statistics
 print(catch_stats)

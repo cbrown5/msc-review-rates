@@ -4,6 +4,8 @@
 CB: Why is vessel bias not having an impact? look into this. 
 Update model for simulating sets per trip? 
 
+make narratives that walk through each paramter set and pros and cons
+
 ### Scientific Context
 
 The Marine Stewardship Council (MSC) requires fisheries to monitor fishing effort with a nominal 30% monitoring coverage rule. However, they haven't specified how that 30% should be distributed across the fleet. There's concern that fishing fleets may select their best 30% of vessels (those with low rates of bycatch) for monitoring, resulting in biased outcomes in terms of estimated bycatch rates versus actual rates.
