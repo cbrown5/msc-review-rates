@@ -2,8 +2,8 @@ parameter_set_id,description,V,mu_trips,theta_trips,mu_sets,theta_sets,beta_0,si
 1,Baseline - YFT,50,10,1.13,26,1.8,5.6,0.41,0.67,0.42,0.3,0,0
 2,High vessel bias,50,10,1.13,26,1.8,5.6,0.41,0.67,0.42,0.3,-2,0
 3,High trip bias,50,10,1.13,26,1.8,5.6,0.41,0.67,0.42,0.3,0,-2
-4,High vessel variance + vessel bias,50,10,1.13,26,1.8,5.6,0.41,0.9,0.42,0.3,-2,0
-5,High trip variance + trip bias,50,10,1.13,26,1.8,5.6,0.8,0.67,0.42,0.3,0,-2
+4,High vessel variance + vessel bias,50,10,1.13,26,1.8,5.6,0.82,0.67,0.42,0.3,-2,0
+5,High trip variance + trip bias,50,10,1.13,26,1.8,5.6,0.41,1.3,0.42,0.3,0,-2
 6,Rare species + vessel bias,50,10,1.13,26,1.8,0.08,0.55,0.65,0.42,0.3,-2,0
 7,Very rare species+ vessel bias,50,10,1.13,26,1.8,0.008,0.55,0.65,0.42,0.3,-2,0
 8,Rare species + trip bias,50,10,1.13,26,1.8,0.08,0.55,0.65,0.42,0.3,0,-2

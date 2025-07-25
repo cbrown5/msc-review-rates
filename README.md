@@ -1,9 +1,9 @@
 # msc-review-rates
 
 ## TODO
-CB: Why is vessel bias not having an impact? look into this. 
 Update model for simulating sets per trip? 
 Add technical annex to document. 
+Note for editing parameters - sigma_z is trip variancSD, sigma_x is vessel SD
 
 
 ### Scientific Context

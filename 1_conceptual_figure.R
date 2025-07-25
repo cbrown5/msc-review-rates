@@ -88,7 +88,7 @@ create_demonstration_data <- function(n_vessels = 5,
 fleet_data <- create_demonstration_data()
 
 # Function to apply different monitoring strategies
-apply_monitoring_strategies <- function(data, p_monitor = 0.3, bias_factor = -5) {
+apply_monitoring_strategies <- function(data, p_monitor = 0.3, bias_factor = 5) {
   # Make copies for each strategy
   data_sets <- data
   data_vessels <- data
@@ -97,7 +97,7 @@ apply_monitoring_strategies <- function(data, p_monitor = 0.3, bias_factor = -5)
   # Strategy 1: Random sets
   set.seed(42)
   data_sets$monitored <- rbinom(nrow(data_sets), 1, p_monitor)
-  data_sets$strategy <- "random sets with 100% EM coverage"
+  data_sets$strategy <- "Sets"
   
   # Strategy 2: Vessels (with potential bias toward vessels with lower catch rates)
   vessels <- unique(data$vessel_id)
@@ -116,7 +116,7 @@ apply_monitoring_strategies <- function(data, p_monitor = 0.3, bias_factor = -5)
       data_vessels$monitored[data_vessels$vessel_id == vessels[i]] <- 1
     }
   }
-  data_vessels$strategy <-   "vessels with biased EM coverage"
+  data_vessels$strategy <-   "Vessels"
   
   # Strategy 3: Trips (with potential bias toward trips with lower catch rates)
   trips <- unique(data[, c("vessel_id", "trip_id")])
@@ -144,7 +144,7 @@ apply_monitoring_strategies <- function(data, p_monitor = 0.3, bias_factor = -5)
       data_trips$monitored[data_trips$vessel_id == v & data_trips$trip_id == t] <- 1
     }
   }
-  data_trips$strategy <- "trips with human observers"
+  data_trips$strategy <- "Trips"
   
   # Combine all data
   combined_data <- rbind(data_sets, data_vessels, data_trips)
@@ -182,9 +182,9 @@ plot_fleet_structure <- function(data, strategy_name, colscale) {
     geom_point(aes(color = monitored, size = catch), alpha = 0.8) +
     scale_color_gradientn(colors = colscale,
                values = scales::rescale(c(0, 50, 100)),
-               name = "Monitored \n Sets (%)") +
+               name = "Reviewed \n Sets (%) \n per trip") +
     scale_size_continuous(name = "Catch Amount", range = c(3, 8)) +  # Increased point size range
-    labs(title = paste("Monitoring", strategy_name),
+    labs(title = paste("Reviewing", strategy_name),
          x = "Trip Number", 
          y = "Vessel") + 
     scale_y_continuous(labels = function(x) paste("Vessel", LETTERS[x])) +
@@ -206,10 +206,11 @@ plot_catch_comparison <- function(stats) {
                      name = "Catch Rate",
                      labels = c("Estimated", "True")) +
     labs(title = "Comparison of True vs. Estimated Catch Rates",
-         x = "Monitoring Strategy", 
+         x = "Monitoring Scenario", 
          y = "Catch Rate") +
     theme_minimal() +
-    theme(legend.position = "bottom")
+    theme(legend.position = "bottom")+ 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }
 
 # 3. Create a plot showing bias percentage by strategy
@@ -217,22 +218,23 @@ plot_bias <- function(stats) {
   ggplot(stats, aes(x = strategy, y = bias_percent)) +
     geom_bar(stat = "identity", fill = "steelblue") +
     labs(title = "",
-         x = "Monitoring Strategy", 
+         x = "Monitoring Scenario", 
          y = "Percent Bias (%)") +
-    theme_minimal()
+    theme_minimal() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }
 
 # Create the plots
 plot1 <- plot_fleet_structure(
   monitored_data, 
-  "random sets with 100% EM coverage",
+  "Sets",
   c("#fff5eb", "#fd8d3c", "#7f2704") # light to dark orange, good contrast on grey
 )
-plot2 <- plot_fleet_structure(monitored_data, "vessels with biased EM coverage",
+plot2 <- plot_fleet_structure(monitored_data, "Vessels",
                c("#c6dbef", "#3182bd", "#08306b")) # light to dark blue, good contrast on grey
 plot3 <- plot_fleet_structure(
   monitored_data, 
-  "trips with human observers",
+  "Trips",
   c("#bae4b3", "#41ab5d", "#005a32") # medium to dark green, better contrast
 )
 
@@ -244,22 +246,27 @@ combined_plot <- (plot1 + plot2 + plot3) / (plot4 + plot5 + plot_spacer())
 combined_plot <- combined_plot + 
   plot_layout(heights = c(3, 1)) +
   plot_annotation(
-    title = "Impact of Different Monitoring Strategies on Catch Rate Estimation",
-    subtitle = "30% monitoring coverage with different allocation strategies",
+    title = "Impact of Different Monitoring Scenarios on Catch Rate Estimation",
+    subtitle = "30% monitoring coverage with different allocation scenarios",
     caption = "Each dot represents a fishing set. Larger dots = higher catch. Brighter dots = monitored sets."
   )
 
 # Save the plot
 ggsave("plots/conceptual_figure.png", 
   combined_plot, width = 15, height = 8, dpi = 300)
+  
 ggsave("plots/lowres/conceptual_figure_lowres.png", combined_plot, width = 12, height = 8, dpi = 100)
+
+ggsave("plots/conceptual_figure.pdf", 
+  combined_plot, width = 14, height = 8)
+
 
 # Also create a simpler conceptual figure just showing the different strategies
 simple_plot <- (plot1 + plot2 + plot3) + 
   plot_layout(nrow = 1) +
   plot_annotation(
-    title = "Different Monitoring Strategies for Fishing Fleet Coverage",
-    subtitle = "Random Sets vs. Vessels vs. Trips",
+    title = "Different Monitoring Scenarios for Fishing Fleet Coverage",
+    subtitle = "Random Sets vs. Whole Vessels vs. Whole Trips",
     caption = "Brighter dots represent monitored sets. Size and color indicate catch amount."
   )
 
@@ -267,8 +274,30 @@ simple_plot <- (plot1 + plot2 + plot3) +
 # Save the simple plot
 ggsave("plots/conceptual_figure_simple.png", 
 simple_plot, width = 18, height = 5, dpi = 300)
-ggsave("plots/lowres/conceptual_figure_simple_lowres.png", 
-simple_plot, width = 18, height = 5, dpi = 100)
+
+
 
 # Print summary statistics
 print(catch_stats)
+plot4 <- plot4 + 
+  theme(
+    text = element_text(size = 22),
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 20),
+    legend.text = element_text(size = 20),
+    legend.title = element_text(size = 22),
+    plot.title = element_text(size = 26),
+    plot.subtitle = element_text(size = 22)
+  )
+plot5 <- plot5 + 
+  theme(
+    text = element_text(size = 22),
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 20),
+    legend.text = element_text(size = 20),
+    legend.title = element_text(size = 22),
+    plot.title = element_text(size = 26),
+    plot.subtitle = element_text(size = 22)
+  )
+ggsave("plots/catch_comparison.pdf", plot4, width = 8, height = 6)
+ggsave("plots/bias_plot.pdf", plot5, width = 8, height = 6)

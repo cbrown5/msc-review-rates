@@ -1,4 +1,4 @@
-rmarkdown::render("report.rmd",
+rmarkdown::render("reportv2.rmd",
     output_file = "msc-review-rates-report.docx")
 
 rmarkdown::render("README.md",

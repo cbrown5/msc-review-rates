@@ -1,0 +1,216 @@
+--- 
+title: "Impact of sampling bias on catch rate estimation"
+author: "CJ Brown (c.j.brown@utas.edu.au); The Nature Conservancy"
+date: "`r Sys.Date()`"
+description: |
+  Analysis of catch rate estimation with biased sampling strategies
+bibliography: references.bib
+output: word_document  
+---
+
+
+## The problem
+
+The Marine Stewardship Council (MSC) requires fishing fleets to monitor 20-30% of their fishing activities to track statistics like market species catch rate and bycatch. However, they haven't specified exactly how that 20-30% should be chosen. This creates a potential problem: fishing companies might choose to monitor only their "best" 20-30% of vessels or trips - those with the lowest bycatch rates - making their overall performance look better than it actually is.
+
+This study investigated whether different ways of selecting which fishing activities to monitor would give accurate estimates of true catch rates, or if some methods would be biased and misleading.
+
+Here we provide narratives for how different strategies for monitoring 30% of fishing activities affect the accuracy of estimated catch rates?
+
+**Why This Matters:** If monitoring is biased toward "cleaner" vessels or trips, regulators and the public might think a fishery is performing better than it really is, potentially allowing harmful fishing practices to continue undetected.
+
+## How The Study Was Done
+
+### Catch model
+
+We created a computer simulation that modeled a fictional fishing fleet. The fleet was based on a long line tuna fleet [e.g. @brown2021electronic]. 
+
+We modelled fishing activities over one year. During the year each of 50 vessels made one or more fishing trips. On each fishing trip they set one or more longlines. We then modelled catch on each longline set. 
+
+The number of trips per vessel was randomized to reflect variation that is evident in real long line fisheries. For example, some vessels may only make 2-3 trips in a year whereas others may make more than 10. Likewise, the number of sets per trip was randomized, using a mean of 26 sets per trip. 
+
+We included three sources of variation in catch rates per set: 
+
+1. Set-to-set variation
+2. Trip-to-trip variation
+3. Vessel-to-vessel variation
+
+We modelled three types of species that were represented with different average catch rates and different levels of variation across sets:
+
+1. A market species that is a target of fishing and is caught commonly, (e.g. yellowfin tuna)
+2. A by-product species that is caught less consistently than the main market species (e.g. blue shark)
+3. A rare bycatch species that is caught inconsistently, but is important, such as a TEP species (e.g. green turtles)
+
+The rare bycatch species could also be representative of other rare events, such as trans-shipment. 
+
+### Monitoring and review model 
+
+We considered different scenarios for *monitoring* the catch and *reviewing* the monitoring data. We use the term *monitor* to refer to vessels/trips/sets that had human or electronic observers present. We use the term *review* to refer to data that was obtained (e.g. not all electronic video is reviewed). We use the term *coverage* to indicate the percentage of the sets in a year that were monitored. Review was always of whole sets. 
+
+Our monitoring scenarios were based on reviewing whole sets, whole trips or whole vessels. 
+
+#### Reviewing whole sets
+
+1. 100% monitoring of fishing with random review of 30% of sets. This scenario is reflective of a fleet with 100% EM coverage and 30% review of those sets. 
+
+#### Reviewing whole trips 
+
+2a. Review data from 30% of trips. This scenario is reflective of human observers who are allocated at random to monitor whole trips. 
+
+2b. Review data from 30% of trips, with a bias towards trips with low catch rates. This scenario could occur when vessel captains shorten their trips when observers are on-board. 
+
+2c. As above, but we assumed the fishery had higher variance in catch rates across trips.
+
+#### Reviewing whole vessels 
+
+3a. Review data from 30% of vessels. This scenario is reflective of electronic monitoring systems being installed on 30% of vessels, and then all fishing sets from those vessels being reviewed. 
+
+3b. Review data from 30% of vessels, with a bias towards vessels with low catch rates. This scenario could occur if electronic monitoring systems are only installed vessels with low catch rates (such as selecting those with the lowest bycatch for EM). 
+
+3c. As above, but we assumed the fishery had higher variance in catch rates across vessels. 
+
+### Simulations 
+
+Our aim was to explore the likelihood that the fictitional monitoring scenarios would obtain unbiased catch rates when applied to each species. We simulated a 1000 replicate years of fishing, to capture the full range of variation described for the catch rates. For each of the 1000 replicates we applied each of the five monitoring scenarios. 
+
+Our outcome statistic was the per cent difference between the mean catch rate as monitored and the true mean catch rate. The mean bias was calculated across the 1000 replicates. This statistic represents, on average, how close to monitoring scenario gets to the true catch rate. The ideal situation is to have mean bias of 0%. 
+
+We are also interested in the variance in bias statistics across the 1000 replicates. The variance represents the consistency in our monitoring results. For example the ideal outcome would be an average bias is 0% and a very low variance (e.g. 1%). This result would indicate a very good chance of getting an accurate catch rate estimate in any given year of fishing. 
+
+We could also find that bias is 0%, but variance is high. Such a result would indicate that for any given year of fishing we are quite likely to obtain an estimated catch rate that is a long way off the true catch rate. 
+
+### Conceptual Framework
+This conceptual figure illustrates how different monitoring approaches work. It shows a fishing fleet where  dots represent different vessels and their fishing activities. Orange dots are monitored, grey dots are not monitored. The three sampling strategies are shown, demonstrating how monitoring coverage varies depending on the strategy used.
+
+![](plots/conceptual_figure.png)
+
+If monitoring is done randomlyl we get an estimate of the catch rate that is representative of the true catch rate. If monitoring is done by whole vessels or whole trips, and the selection of those units is biased towards lower catch rates, then the estimated catch rates will also be biased. 
+
+## Scenarios 
+
+We describe scenarios below. This plot shows the percentage bias in estimated catch rates for each scenario and monitoring strategy. Points show mean bias across 1000 simulations and error bars show 95% confidence intervals.
+
+![](plots/plot_bias_percent.png)
+
+[Note still to update figure once we decide on scenario hierarchy]
+
+### Scenario 1: Randomized review of sets 
+
+This is the ideal scenario for 30% distribution of monitoring across sets. We randomly selected 30% of all individual sets for monitoring. This results in no bias on average and high precision. 
+
+### Scenario 2: Review whole trips 
+
+Randomly selected 30% of fishing trips for monitoring. All sets within the selected trips are monitored. This results in no bias on average but lower precision compared to randomized monitoring of sets due to the clustering of data within trips.  
+
+### Scenario 3: Review whole vessels 
+
+
+
+
+----------------- 
+
+### Scenario 3: Randomized review of all sets on given vessels
+
+In this scenario, 30% of vessels are randomly selected for monitoring, and all trips and sets within those vessels are monitored and reviewed. This results in no bias on average but has the lowest precision among the three randomized strategies due to the clustering of data within vessels.
+
+Practically, this strategy can be achieved by installing electronic monitoring systems on a random subset of vessels.
+
+### Scenario 4: Monitoring trips with high trip bias
+
+This scenario assumes that monitoring is biased toward trips with lower catch rates. This results in significant underestimation of catch rates and reduced precision.
+
+Practically, this bias could occur if human observers are preferentially assigned to trips perceived as "cleaner" or less risky.
+
+### Scenario 5: Monitoring trips with high trip variance and bias
+
+This scenario combines high natural variation in catch rates between trips with biased monitoring toward trips with lower catch rates. This results in severe underestimation of catch rates and increased uncertainty.
+
+This could occur in fisheries with high differences in catch rates across fleets, such as when there are significant seasonal changes in catch. It could also occur when vessel captians change trip plans if they know they are being monitored, such as making shorter trips when observers are assigned.
+
+### Scenario 6: Monitoring vessels with high vessel bias
+
+This scenario assumes that monitoring is biased toward vessels with lower catch rates. This results  underestimation of catch rates and reduced precision.
+
+This bias could occur if electronic monitoring systems are preferentially installed on vessels perceived as "cleaner" [e.g. @roberson2025opportunity]. This practice has been common in other certification schemes (such as ASC and FSC) where companies choose a subset of their best operations and then apply for certification for those. 
+
+### Scenario 7: Monitoring vessels with high vessel variance and bias
+
+This scenario combines high natural variation in catch rates between vessels with biased monitoring toward vessels with lower catch rates. This results in severe underestimation of catch rates and increased uncertainty.
+
+Practically, this could occur in fleets with highly variable vessel performance or differences in fishing practices. Monitoring is then biased towards those that are cleaner. 
+
+### Scenario 8: Monitoring trips for rare species with trip bias
+
+This is similar to above, but for a rare species. This results in significant underestimation of rare species catch rates.
+
+
+### Scenario 9: Monitoring vessels for rare species with vessel bias
+
+This is similar to above, but for a rare species. This results in significant underestimation of rare species catch rates.
+
+### Scenario 10: Monitoring trips for very rare species with trip bias
+
+This is similar to above, but is relevant for a very rare species or a rare compliance event. This results in severe underestimation of very rare species catch rates, or underestimation of the occurrence of compliance events. 
+
+Practically, this bias could occur if human observers are preferentially assigned to trips perceived as less risky for very rare species bycatch.
+
+### Scenario 11: Monitoring vessels for very rare species with vessel bias
+
+This is similar to above, but is relevant for a very rare species or a rare compliance event. This results in severe underestimation of very rare species catch rates.
+
+Practically, this bias could occur if electronic monitoring systems are preferentially installed on vessels perceived as less risky for very rare species bycatch.
+
+## Key Findings
+
+The key take-home here is that biasing towards the lowest catch trips caused the biggest under-estimation of catch rates.
+
+When fishing sets were chosen completely randomly across the fleet, the estimated catch rates were very close to the true catch rates. They also had greater certainty (tighter intervals).  This approach showed minimal bias regardless of how the fleet was structured
+
+When monitoring was selecting whole vessels the uncertainty in catch rates was much greater. This means less certainty in what true catch rates will be. Bias towards low catch rate vessels also caused under-estimation of catch rates, particularly for rare species. 
+
+Monitoring that is biased to whole trips (e.g. human observers) tended to have greater bias than monitoring that was biased to while vessels (e.g. selective deployment of electronic monitoring). This is likely because trip-to-trip variation was greater than vessel-to-vessel variation. The results would be reversed if vessels were the dominant source of variation in catch rates.
+
+## What This Means in Practice
+
+**For Fisheries Management:**
+The current MSC requirement of "30% monitoring" is insufficient without specifying how that 30% should be selected. Random selection across all fishing operations provides the most accurate estimates. This requires 100% EM or human coverage on vessels.
+
+Allowing companies to choose which vessels or trips to monitor, or to alter practices if they know they are being monitored, creates opportunities for gaming the system
+
+**For Consumers and Environmental Groups:**
+Fisheries certified under current MSC standards might not be as sustainable as they appear if monitoring is biased. More specific requirements for random monitoring could improve the reliability of sustainability certifications
+
+**For the Fishing Industry:**
+While random monitoring might reveal higher bycatch rates initially, it provides a more honest baseline for improvement. It will be harder for companies to understand their fleets and fishing practices if EM allocation is biased to some vessels. 
+
+## Conclusion 
+
+We need more specific instructions than simply requiring 30% coverage. The selection of the 30% matters enormously. Random selection across all fishing operations provides accurate estimates, while allowing strategic selection of "better" vessels or trips can severely bias results and undermine the goals of sustainable fisheries management.
+
+
+--------------------------------
+## Box 1: 20% coverage of sets 
+TODO add this
+
+--------------------------------
+
+
+--------------------------------
+## Box 2: Implications of monitoring scenarios for bias in logbook reporting 
+
+Observers could be used to check discrepencies in logbook reporting. Logbooks can under-report catch, especially bycatch or TEP species, compared to observer data (refs). Observers can be used to check if such bias in logbook reporting exists under the assumption that rates of reporting are not influenced by presence of observers. 
+
+The same issues for monitoring bias apply to monitoring of logbook reporting. If monitoring is biased towards vessels with accurate logbooks, then the level of fleet-wide bias may be under-estimated. A likely situation is that logbooks are more accurate when fishers know they are being monitored (cite emery paper). In a case where you had partial coverage, this bias would falsely lead an analyst to beleive that logbook data is accurate. A fleet with 100% coverage, but partial review of randomly selected fishing events, incentivises more accurate logbook reporting [@emery2019].
+
+TODO
+- add numbers on level of bias
+- discuss tiered risk scale of log book accuracy. 
+
+--------------------------------
+
+## Technical annex 
+
+
+
+## References
+
