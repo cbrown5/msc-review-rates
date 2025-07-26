@@ -1,6 +1,8 @@
 # data
 simulation_results_full_tidy.csv
 
+timeline.md
+
 # History files
 .Rhistory
 .Rapp.history

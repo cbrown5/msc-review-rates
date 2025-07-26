@@ -20,7 +20,6 @@ Different monitoring systems have different capabilities:
 ### Model Formulation
 
 The model is split into two modules, a catch event model and a monitoring module. 
-Further details are in the file `model-formulation.md`
 Used FSM as this had the most reliable data in logbooks. 
 
 #### Parameter calculations 

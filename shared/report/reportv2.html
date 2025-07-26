@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.56">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="CJ Brown (c.j.brown@utas.edu.au); The Nature Conservancy">
+<meta name="description" content="Analysis of catch rate estimation with biased sampling strategies">
+
+<title>Impact of sampling bias on catch rate estimation</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="reportv2_files/libs/clipboard/clipboard.min.js"></script>
+<script src="reportv2_files/libs/quarto-html/quarto.js"></script>
+<script src="reportv2_files/libs/quarto-html/popper.min.js"></script>
+<script src="reportv2_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="reportv2_files/libs/quarto-html/anchor.min.js"></script>
+<link href="reportv2_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="reportv2_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="reportv2_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="reportv2_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="reportv2_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Impact of sampling bias on catch rate estimation</h1>
+</div>
+
+<div>
+  <div class="description">
+    <p>Analysis of catch rate estimation with biased sampling strategies</p>
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>CJ Brown (c.j.brown@utas.edu.au); The Nature Conservancy </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">Invalid Date</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="the-problem" class="level2">
+<h2 class="anchored" data-anchor-id="the-problem">The problem</h2>
+<p>The Marine Stewardship Council (MSC) requires fishing fleets to monitor 20-30% of their fishing activities to track statistics like market species catch rate and bycatch. However, they haven’t specified exactly how that 20-30% should be chosen. This creates a potential problem: fishing companies might choose to monitor only their “best” 20-30% of vessels or trips - those with the lowest bycatch rates - making their overall performance look better than it actually is.</p>
+<p>This study investigated whether different ways of selecting which fishing activities to monitor would give accurate estimates of true catch rates, or if some methods would be biased and misleading.</p>
+<p>Here we provide narratives for how different strategies for monitoring 30% of fishing activities affect the accuracy of estimated catch rates?</p>
+<p><strong>Why This Matters:</strong> If monitoring is biased toward “cleaner” vessels or trips, regulators and the public might think a fishery is performing better than it really is, potentially allowing harmful fishing practices to continue undetected.</p>
+</section>
+<section id="how-the-study-was-done" class="level2">
+<h2 class="anchored" data-anchor-id="how-the-study-was-done">How The Study Was Done</h2>
+<section id="catch-model" class="level3">
+<h3 class="anchored" data-anchor-id="catch-model">Catch model</h3>
+<p>We created a computer simulation that modeled a fictional fishing fleet. The fleet was based on a long line tuna fleet <span class="citation" data-cites="brown2021electronic">(e.g. <a href="#ref-brown2021electronic" role="doc-biblioref">Brown et al. 2021</a>)</span>.</p>
+<p>We modelled fishing activities over one year. During the year each of 50 vessels made one or more fishing trips. On each fishing trip they set one or more longlines. We then modelled catch on each longline set.</p>
+<p>The number of trips per vessel was randomized to reflect variation that is evident in real long line fisheries. For example, some vessels may only make 2-3 trips in a year whereas others may make more than 10. Likewise, the number of sets per trip was randomized, using a mean of 26 sets per trip.</p>
+<p>We included three sources of variation in catch rates per set:</p>
+<ol type="1">
+<li>Set-to-set variation</li>
+<li>Trip-to-trip variation</li>
+<li>Vessel-to-vessel variation</li>
+</ol>
+<p>We modelled three types of species that were represented with different average catch rates and different levels of variation across sets:</p>
+<ol type="1">
+<li>A market species that is a target of fishing and is caught commonly, (e.g.&nbsp;yellowfin tuna)</li>
+<li>A by-product species that is caught less consistently than the main market species (e.g.&nbsp;blue shark)</li>
+<li>A rare bycatch species that is caught inconsistently, but is important, such as a TEP species (e.g.&nbsp;green turtles)</li>
+</ol>
+<p>The rare bycatch species could also be representative of other rare events, such as trans-shipment.</p>
+</section>
+<section id="monitoring-and-review-model" class="level3">
+<h3 class="anchored" data-anchor-id="monitoring-and-review-model">Monitoring and review model</h3>
+<p>We considered different scenarios for <em>monitoring</em> the catch and <em>reviewing</em> the monitoring data. We use the term <em>monitor</em> to refer to vessels/trips/sets that had human or electronic observers present. We use the term <em>review</em> to refer to data that was obtained (e.g.&nbsp;not all electronic video is reviewed). We use the term <em>coverage</em> to indicate the percentage of the sets in a year that were monitored. Review was always of whole sets.</p>
+<p>Our monitoring scenarios were based on reviewing whole sets, whole trips or whole vessels.</p>
+<section id="reviewing-whole-sets" class="level4">
+<h4 class="anchored" data-anchor-id="reviewing-whole-sets">Reviewing whole sets</h4>
+<ol type="1">
+<li>100% monitoring of fishing with random review of 30% of sets. This scenario is reflective of a fleet with 100% EM coverage and 30% review of those sets.</li>
+</ol>
+</section>
+<section id="reviewing-whole-trips" class="level4">
+<h4 class="anchored" data-anchor-id="reviewing-whole-trips">Reviewing whole trips</h4>
+<p>2a. Review data from 30% of trips. This scenario is reflective of human observers who are allocated at random to monitor whole trips.</p>
+<p>2b. Review data from 30% of trips, with a bias towards trips with low catch rates. This scenario could occur when vessel captains shorten their trips when observers are on-board.</p>
+<p>2c. As above, but we assumed the fishery had higher variance in catch rates across trips.</p>
+</section>
+<section id="reviewing-whole-vessels" class="level4">
+<h4 class="anchored" data-anchor-id="reviewing-whole-vessels">Reviewing whole vessels</h4>
+<p>3a. Review data from 30% of vessels. This scenario is reflective of electronic monitoring systems being installed on 30% of vessels, and then all fishing sets from those vessels being reviewed.</p>
+<p>3b. Review data from 30% of vessels, with a bias towards vessels with low catch rates. This scenario could occur if electronic monitoring systems are only installed vessels with low catch rates (such as selecting those with the lowest bycatch for EM).</p>
+<p>3c. As above, but we assumed the fishery had higher variance in catch rates across vessels.</p>
+</section>
+</section>
+<section id="simulations" class="level3">
+<h3 class="anchored" data-anchor-id="simulations">Simulations</h3>
+<p>Our aim was to explore the likelihood that the fictitional monitoring scenarios would obtain unbiased catch rates when applied to each species. We simulated a 1000 replicate years of fishing, to capture the full range of variation described for the catch rates. For each of the 1000 replicates we applied each of the five monitoring scenarios.</p>
+<p>Our outcome statistic was the per cent difference between the mean catch rate as monitored and the true mean catch rate. The mean bias was calculated across the 1000 replicates. This statistic represents, on average, how close to monitoring scenario gets to the true catch rate. The ideal situation is to have mean bias of 0%.</p>
+<p>We are also interested in the variance in bias statistics across the 1000 replicates. The variance represents the consistency in our monitoring results. For example the ideal outcome would be an average bias is 0% and a very low variance (e.g.&nbsp;1%). This result would indicate a very good chance of getting an accurate catch rate estimate in any given year of fishing.</p>
+<p>We could also find that bias is 0%, but variance is high. Such a result would indicate that for any given year of fishing we are quite likely to obtain an estimated catch rate that is a long way off the true catch rate.</p>
+</section>
+<section id="conceptual-framework" class="level3">
+<h3 class="anchored" data-anchor-id="conceptual-framework">Conceptual Framework</h3>
+<p>This conceptual figure illustrates how different monitoring approaches work. It shows a fishing fleet where dots represent different vessels and their fishing activities. Orange dots are monitored, grey dots are not monitored. The three sampling strategies are shown, demonstrating how monitoring coverage varies depending on the strategy used.</p>
+<p><img src="images/conceptual_figure.png" class="img-fluid"></p>
+<p>If monitoring is done randomly we get an estimate of the catch rate that is representative of the true catch rate. If monitoring is done by whole vessels or whole trips, and the selection of those units is biased towards lower catch rates, then the estimated catch rates will also be biased.</p>
+</section>
+</section>
+<section id="scenarios" class="level2">
+<h2 class="anchored" data-anchor-id="scenarios">Scenarios</h2>
+<p>We describe scenarios below. This plot shows the percentage bias in estimated catch rates for each scenario and monitoring strategy. Points show mean bias across 1000 simulations and error bars show 95% confidence intervals.</p>
+<p><img src="images/plot_bias_percent.png" class="img-fluid"></p>
+<p>[Note still to update figure once we decide on scenario hierarchy]</p>
+<p>[Note: plan is to have one panel for each scenario below. Then need to add back in results for biased vessel/trip allocation for review]</p>
+<section id="scenario-1-randomized-review-of-sets" class="level3">
+<h3 class="anchored" data-anchor-id="scenario-1-randomized-review-of-sets">Scenario 1: Randomized review of sets</h3>
+<p>This is the ideal scenario for 30% distribution of monitoring across sets. We randomly selected 30% of all individual sets for monitoring. This results in no bias on average and high precision.</p>
+</section>
+<section id="scenario-2-review-whole-trips" class="level3">
+<h3 class="anchored" data-anchor-id="scenario-2-review-whole-trips">Scenario 2: Review whole trips</h3>
+<p>Randomly selected 30% of fishing trips for monitoring. All sets within the selected trips are monitored. This results in no bias on average but lower precision compared to randomized monitoring of sets due to the clustering of data within trips.</p>
+</section>
+<section id="scenario-3-review-whole-vessels" class="level3">
+<h3 class="anchored" data-anchor-id="scenario-3-review-whole-vessels">Scenario 3: Review whole vessels</h3>
+<p>In this scenario, 30% of vessels are randomly selected for monitoring, and all trips and sets within those vessels are monitored and reviewed. This results in no bias on average but has the lowest precision among the three randomized strategies due to the clustering of data within vessels.</p>
+<p>Practically, this strategy can be achieved by installing electronic monitoring systems on a random subset of vessels.</p>
+</section>
+</section>
+<section id="box-1-20-coverage-of-sets" class="level2">
+<h2 class="anchored" data-anchor-id="box-1-20-coverage-of-sets">Box 1: 20% coverage of sets</h2>
+<p>TODO add this</p>
+</section>
+<section id="box-2-implications-of-monitoring-scenarios-for-bias-in-logbook-reporting" class="level2">
+<h2 class="anchored" data-anchor-id="box-2-implications-of-monitoring-scenarios-for-bias-in-logbook-reporting">Box 2: Implications of monitoring scenarios for bias in logbook reporting</h2>
+<p>Observers could be used to check discrepencies in logbook reporting. Logbooks can under-report catch, especially bycatch or TEP species, compared to observer data (refs). Observers can be used to check if such bias in logbook reporting exists under the assumption that rates of reporting are not influenced by presence of observers.</p>
+<p>The same issues for monitoring bias apply to monitoring of logbook reporting. If monitoring is biased towards vessels with accurate logbooks, then the level of fleet-wide bias may be under-estimated. A likely situation is that logbooks are more accurate when fishers know they are being monitored (cite emery paper). In a case where you had partial coverage, this bias would falsely lead an analyst to beleive that logbook data is accurate. A fleet with 100% coverage, but partial review of randomly selected fishing events, incentivises more accurate logbook reporting <span class="citation" data-cites="emery2019">(<a href="#ref-emery2019" role="doc-biblioref">Emery et al. 2019</a>)</span>.</p>
+<p>TODO - add numbers on level of bias - discuss tiered risk scale of log book accuracy.</p>
+<hr>
+</section>
+<section id="technical-annex" class="level2">
+<h2 class="anchored" data-anchor-id="technical-annex">Technical annex</h2>
+<section id="parameter-calculations" class="level4">
+<h4 class="anchored" data-anchor-id="parameter-calculations">Parameter calculations</h4>
+<p>Parameters were calculated from a longline tuna fleet, data given in <span class="citation" data-cites="brown2021electronic">Brown et al. (<a href="#ref-brown2021electronic" role="doc-biblioref">2021</a>)</span>.</p>
+</section>
+<section id="catch-event-module" class="level4">
+<h4 class="anchored" data-anchor-id="catch-event-module">Catch event module</h4>
+<p><span class="math display">\[ T_{v} = dnegbin(\mu^{trips}, \theta^{trips}) \]</span></p>
+<p><span class="math display">\[
+x~v = dnorm(0, \sigma_x\^(-2))
+\]</span></p>
+<p>S[v,t] ~ dnegbin(mu_sets, theta_sets) #sample number of sets on the trip z[v,t] ~ dnorm(0, sigma_z^(-2)) # sample trip level random effect</p>
+<pre><code>mu[v,t] = beta_0 + z[v,t] + x[v] #calculate expected catch rate</code></pre>
+<pre><code>  y[v,t,s] ~ dnegbin(mu[v,t], theta) # sample catch for this set theta is the dispersion parameter</code></pre>
+<p>The model was formulated as follows:</p>
+<pre><code>for (v in 1:V){ # for each vessel
+  
+  for (t in 1:T[v]){ # for each trip this vessel did
+    S[v,t] ~ dnegbin(mu_sets, theta_sets) #sample number of sets on the trip 
+    z[v,t] ~ dnorm(0, sigma_z^(-2)) # sample trip level random effect 
+
+    mu[v,t] = beta_0 + z[v,t] + x[v] #calculate expected catch rate
+
+    for (s in 1:S[v,t]){ # for each set
+      y[v,t,s] ~ dnegbin(mu[v,t], theta) # sample catch for this set theta is the dispersion parameter
+    }
+  }
+}</code></pre>
+<p><strong>Parameter Explanations:</strong> - <code>V</code>: Total number of vessels in the fleet - <code>T[v]</code>: Number of trips taken by vessel v in a year, sampled from a negative binomial distribution - <code>mu_trips</code>: Expected number of trips per vessel per year - <code>theta_trips</code>: Dispersion parameter for the negative binomial distribution of trips - <code>x[v]</code>: Vessel-level random effect for vessel v, sampled from a normal distribution - <code>sigma_x</code>: Standard deviation parameter for the vessel-level random effects - <code>S[v,t]</code>: Number of fishing sets on trip t of vessel v, sampled from a negative binomial distribution - <code>mu_sets</code>: Expected number of sets per trip - <code>theta_sets</code>: Dispersion parameter for the negative binomial distribution of sets - <code>z[v,t]</code>: Trip-level random effect for trip t of vessel v, sampled from a normal distribution - <code>sigma_z</code>: Standard deviation parameter for the trip-level random effects - <code>mu[v,t]</code>: Expected catch rate for trip t of vessel v, combining fixed effect (beta_0) and random effects - <code>beta_0</code>: Baseline expected catch rate (fixed effect) - <code>y[v,t,s]</code>: Observed catch for set s on trip t of vessel v, following a negative binomial distribution - <code>theta</code>: Dispersion parameter for the negative binomial distribution of catch, controlling overdispersion</p>
+<p><strong>Sampling Distributions:</strong> - Catch per set: Negative binomial - Sets per trip and trips per vessel: Negative binomial</p>
+<p>Each sample represents one fishing set (e.g., longline set, purse seine net).</p>
+</section>
+<section id="monitoring-module" class="level4">
+<h4 class="anchored" data-anchor-id="monitoring-module">Monitoring Module</h4>
+<p>The monitoring module determines how monitoring of catches is distributed across the fleet with several parameters:</p>
+<p><strong>Parameters:</strong> - Total amount of monitoring (percentage of fishing sets monitored) - Distribution of monitoring across fleet components, with option for bias - Coverage within selected units (percentage of trips/sets monitored within selected vessels)</p>
+<p>The monitoring module was formulated as follows:</p>
+<pre><code>
+# Strategy 1 sampling across sets
+#matrix for storing monitoring status
+M_sets = matrix(V,T,S)
+phi_sets = logit(p_monitor)
+M_sets[v,t,s] ~ dbern(inverse_logit(phi))
+
+# Strategy 2 sampling random vessels
+M_vessels = matrix(V,T,S)
+phi_vessels = array(dim=c(V,T,S))
+for (v in 1:V) {
+  phi_vessels[v,,] = logit(p_monitor) + bias_v * x[v]
+}
+M_vessels[v,t,s] ~ dbern(inverse_logit(phi_vessels[v,t,s]))
+# Strategy 3: Random selection of trips within vessels
+M_trips = matrix(V,T,S)
+phi_trips = array(dim=c(V,T,S))
+for (v in 1:V) {
+  for (t in 1:T[v]) {
+    phi_trips[v,t,] = logit(p_monitor) + bias_factor * z[v,t]
+  }
+}
+M_trips[v,t,s] ~ dbern(inverse_logit(phi_trips[v,t,s]))
+     </code></pre>
+<p><strong>Parameter Explanations:</strong> - <code>M_sets</code>, <code>M_vessels</code>, <code>M_trips</code>: Matrices indicating monitoring status for each set under different strategies (1 = monitored, 0 = not monitored) - <code>p_monitor</code>: Base proportion of sets to be monitored (e.g., 0.3 for 30% coverage) - <code>phi_sets</code>, <code>phi_vessels</code>, <code>phi_trips</code>: Logit-transformed probabilities of monitoring for each strategy - <code>bias_v</code>: Bias factor for vessel-based selection (when &gt; 0, vessels with lower catch rates are more likely selected) - <code>bias_factor</code>: Bias factor for trip-based selection (when &gt; 0, trips with lower catch rates are more likely selected) - <code>x[v]</code>: Vessel-level random effect used in the bias mechanism for vessel selection - <code>z[v,t]</code>: Trip-level random effect used in the bias mechanism for trip selection</p>
+<p><strong>Bias Mechanism:</strong> - When bias_factor &gt; 0, vessels/trips with lower catch rates (negative random effects) are more likely to be selected - Higher bias_factor values lead to stronger selection bias - The bias operates through the vessel random effect (x[v]) or trip random effect (z[v,t]) depending on strategy - logit_inverse(x) = 1/(1+exp(-x)) transforms logit values back to probabilities</p>
+<p><strong>Distribution Strategies:</strong> - Random across sets: Each set has equal probability of being monitored - Random across vessels: Selected vessels have all their sets monitored - Random across trips within vessels: Selected trips have all their sets monitored</p>
+</section>
+<section id="catch-statistic-estimation" class="level3">
+<h3 class="anchored" data-anchor-id="catch-statistic-estimation">Catch statistic estimation</h3>
+<p>For a given monitoring strategy <code>M</code> and catch data <code>y</code>, the estimated catch rate per set can be calculated as follows:</p>
+<pre><code># Apply monitoring to estimate catch rate
+estimated_catch_rate = sum(y[v,t,s] * M[v,t,s]) / sum(M[v,t,s]) 
+true_catch_rate = sum(y[v,t,s])/prod(dim(y))
+bias = estimated_total_catch - true_total_catch
+bias_percent = bias / true_catch_rate * 100</code></pre>
+</section>
+</section>
+<section id="references" class="level2 unnumbered">
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-brown2021electronic" class="csl-entry" role="listitem">
+Brown, Christopher J, Amelia Desbiens, Max D Campbell, Edward T Game, Eric Gilman, Richard J Hamilton, Craig Heberer, David Itano, and Kydd Pollock. 2021. <span>“Electronic Monitoring for Improved Accountability in Western Pacific Tuna Longline Fisheries.”</span> <em>Marine Policy</em> 132: 104664.
+</div>
+<div id="ref-emery2019" class="csl-entry" role="listitem">
+Emery, Timothy J., Rocio Noriega, Ashley J. Williams, and James Larcombe. 2019. <span>“Changes in Logbook Reporting by Commercial Fishers Following the Implementation of Electronic Monitoring in Australian Commonwealth Fisheries.”</span> <em>Marine Policy</em> 104: 135–45. https://doi.org/<a href="https://doi.org/10.1016/j.marpol.2019.01.018">https://doi.org/10.1016/j.marpol.2019.01.018</a>.
+</div>
+</div></section></div></main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
