@@ -11,9 +11,13 @@ library(tidyverse)
 source("simulation_functions.R")
 
 # Read parameter sets
-params_df <- read.csv("parameters.csv")
+monitoring_params_df <- read.csv("parameters-monitoring.csv")
+spp_params_df <- read.csv("parameters-species.csv")
 
-# Number of replications
+params_df <- merge(monitoring_params_df, spp_params_df, by = NULL) %>%
+mutate(parameter_set_id = row_number())
+
+#Number of replications
 n_replications <- 250
 
 # Initialize results storage
