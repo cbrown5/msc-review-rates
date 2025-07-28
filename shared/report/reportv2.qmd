@@ -201,7 +201,7 @@ All parameters were chosen to be representative of the Western Pacific longline 
 **Table S3** Fixed parameter values. Fleet specific parameters was based on values from @brown2021electronic.
 
 | Parameter | Value | Description |
-|-----------------------|------------------|-------------------------------|
+|-----------------------|-------------------|-------------------------------|
 | V | 50 | Number of vessels in the simulated fleet, representative of medium-sized longline fleet |
 | μ^trips^ | 10 | Mean number of trips per vessel per year, based on typical longline operations |
 | θ^trips^ | 1.13 | Dispersion parameter for trips per vessel, allows realistic variation in fishing effort |
@@ -213,7 +213,7 @@ All parameters were chosen to be representative of the Western Pacific longline 
 **Table S4** Parameters for monitoring scenarios. Parameters was based on values from @brown2021electronic.
 
 | Scenario | Parameter | Value | Description |
-|-----------------|-----------------|-----------------|--------------------|
+|------------------|------------------|------------------|--------------------|
 | Baseline - YFT | β₀ | 5.6 | Baseline catch rate for common market species (yellowfin tuna) |
 |  | σˣ | 0.41 | Standard deviation of vessel-level variation in catch rates |
 |  | σᶻ | 0.67 | Standard deviation of trip-level variation in catch rates |

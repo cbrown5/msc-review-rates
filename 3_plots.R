@@ -37,6 +37,8 @@ scnrs_to_plot <- data.frame(
   )
 )
 
+#UP TO HERE add strategies to scnrs to plot
+
 results_plot <- results_summary %>%
   inner_join(scnrs_to_plot) %>%
   # change description for "Baseline - YFT" to "Baseline {monitoring strategy}

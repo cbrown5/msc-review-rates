@@ -1,5 +1,8 @@
 # MSC Review Rates Simulation - Tidy Simulation Runner
 # This script runs the simulations for each parameter set using the new tidy functions
+# It does all combinations of species and monitoring scenarios. 
+# Note that the application of vessel or trip bias only applies to monitoring scenarios for vessels or trips. 
+# therefore the outcomes with these bias parameters != 0 will be the same for all 'set based' monitoring scenarios. 
 
 # Load required libraries
 library(tidyverse)
