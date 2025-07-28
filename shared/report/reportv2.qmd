@@ -11,23 +11,21 @@ editor: visual
 
 ## The problem
 
-The Marine Stewardship Council (MSC) requires fishing fleets to monitor 20-30% of their fishing activities to track statistics like market species catch rate and bycatch. However, they haven't specified exactly how that 20-30% should be chosen. This creates a potential problem: fishing companies might choose to monitor only their "best" 20-30% of vessels or trips - those with the lowest bycatch rates - making their overall performance look better than it actually is.
+The Marine Stewardship Council (MSC) requires 30% coverage for independent monitoring of fisheries on the high seas to track statistics like market species catch rate and bycatch. MSC is considering a revised threshold of 20% coverage. However, they haven’t specified exactly how that 20-30% should be chosen. This creates a potential problem: nations and fishing companies might choose to monitor only their “best” 20-30% of vessels or trips - those with the lowest bycatch rates - making their overall performance look better than it actually is.
 
-This study investigated whether different ways of selecting which fishing activities to monitor would give accurate estimates of true catch rates, or if some methods would be biased and misleading.
+This study used a computer simulation and a hypothetical fishery to investigate whether different ways of selecting which fishing activities to monitor would give accurate estimates of true catch rates, or if some selection methods, referred to as “scenarios”, would be biased and misleading. We provide narratives for how different scenarios for monitoring 30% of fishing activities affect the accuracy of estimated catch rates for both target and bycatch.
 
-Here we provide narratives for how different strategies for monitoring 30% of fishing activities affect the accuracy of estimated catch rates?
-
-**Why This Matters:** If monitoring is biased toward "cleaner" vessels or trips, regulators and the public might think a fishery is performing better than it really is, potentially allowing harmful fishing practices to continue undetected.
+**Why This Matters:** If monitoring is biased toward “cleaner” vessels or trips, regulators and the public might think a fishery is performing better than it really is, potentially allowing harmful fishing practices to continue undetected and undeterred.
 
 ## How The Study Was Done
 
 ### Catch model
 
-We created a computer simulation that modeled a fictional fishing fleet. The fleet was based on a long line tuna fleet [e.g. @brown2021electronic].
+We created a computer simulation that modeled a fictional fishing fleet with 50 vessels. The fleet was based on a long line tuna fleet [e.g. @brown2021electronic]. The fleet was monitored by a manager, who has to make a decision about how to allocate monitoring and review of data for the coming year. We assumed the manager knew the number of vessels, but not the amount of fishing they would do or how much they would catch.
 
 We modelled fishing activities over one year. During the year each of 50 vessels made one or more fishing trips. On each fishing trip they set one or more longlines. We then modelled catch on each longline set.
 
-The number of trips per vessel was randomized to reflect variation that is evident in real long line fisheries. For example, some vessels may only make 2-3 trips in a year whereas others may make more than 10. Likewise, the number of sets per trip was randomized, using a mean of 26 sets per trip.
+The number of trips per vessel was randomized to reflect variation that is evident in real long line fisheries. For example, some vessels may only make 2-3 trips in a year whereas others may make more than 10. Likewise, the number of sets per trip was randomized, using a mean of 26 sets per trip. Differences in the number of sets represent trips of different durations.
 
 We included three sources of variation in catch rates per set:
 
@@ -35,21 +33,21 @@ We included three sources of variation in catch rates per set:
 2.  Trip-to-trip variation
 3.  Vessel-to-vessel variation
 
-We modelled three types of species that were represented with different average catch rates and different levels of variation across sets:
+We modelled three types of catch events with different average catch rates:
 
 1.  A market species that is a target of fishing and is caught commonly, (e.g. yellowfin tuna)
 2.  A by-product species that is caught less consistently than the main market species (e.g. blue shark)
-3.  A rare bycatch species that is caught inconsistently, but is important, such as a TEP species (e.g. green turtles)
-
-The rare bycatch species could also be representative of other rare events, such as trans-shipment.
+3.  A rare bycatch species that is caught inconsistently, but is a vulnerable species and/or a designated endangered, threatened, or protected species (e.g. green turtles). The rare bycatch species could also be representative of other rare events, such as trans-shipment
 
 ### Monitoring and review model
 
-We considered different scenarios for *monitoring* the catch and *reviewing* the monitoring data. We use the term *monitor* to refer to vessels/trips/sets that had human or electronic observers present. We use the term *review* to refer to data that was obtained (e.g. not all electronic video is reviewed). We use the term *coverage* to indicate the percentage of the sets in a year that were monitored. Review was always of whole sets.
+We considered different scenarios for *monitoring* the fishing activity and *reviewing* the monitoring data. We use the term *monitor* to refer to vessels/trips/sets that had human observers or electronic monitoring present. We use the term *coverage* to indicate the percentage of the sets in a year that were monitored We use the term *review* to refer to monitoring data that was obtained and analyzed (e.g. not all electronic video is reviewed[\[VS1\]](#_msocom_1) ).. Review was always of whole sets.
 
-Our monitoring scenarios were based on reviewing whole sets, whole trips or whole vessels.
+In total, we simulated seven scenarios the span various monitoring and review configurations. Each scenario [\[VS2\]](#_msocom_2) was based on reviewing whole sets, whole trips, or whole vessels.
 
-#### Reviewing whole sets
+ [\[VS1\]](#_msoanchor_1)I don’t understand this.
+
+ [\[VS2\]](#_msoanchor_2)The “monitoring scenarios” haven’t been introduced yet so this may not make sense. Consider moving this to the section where they are introduced.Reviewing whole sets at random
 
 1.  100% monitoring of fishing with random review of 30% of sets. This scenario is reflective of a fleet with 100% EM coverage and 30% review of those sets.
 
@@ -127,15 +125,39 @@ TODO - add numbers on level of bias - discuss tiered risk scale of log book accu
 
 ## Technical annex
 
-The model for was split into a catch event module that modelled catch per set (Table S1) and a monitoring module that monitored monitoring and review of a sub-sample of all sets (Table S2).
+We developed a general model for (1) simulating catch from a year's worth of fishing activity and (2) simulating monitoring and review of that fishing catch. The model was split into a catch event module that modelled catch per set (Table S1) and a monitoring module that monitored monitoring and review of a sub-sample of all sets (Table S2). Simulation of catch and allocation of monitoring effort were both stochastic. This allowed us to explore how different monitoring scenarios impacted bias in estimated catch rates, with realistic levels of uncertainty. Specifically, our models accounted for uncertainty in: how much fishing activity happens in the coming year, how much catch is taken and by which vessels and on which trips, how monitoring effort is allocated to fishing activities, bias in how monitoring effort is allocated. These different sources of uncertainty were important because a plan for monitoring needs to be made before the fishing activity happens. With our model, we then simulated replicate years of fishing to obtain catch bias estimates along with ranges of variability.
 
-The model for fishing activities included multiple sources of variation. This included modelling the number of trips per vessel and number of sets per trip, as well as catch per set. Trips per vessel and sets per trip were modelled as random numbers, to reflect real world variation in their numbers. The number of vessels was fixed at 50. Catch per set was modelled as a random number with additive components for vessel identity and trip identity. Therefore, catch events included covariation caused by vessel identity and trip identity.
+For the catch model we simulated the number of trips per vessel and number of sets per trip, as well as catch per set. Trips per vessel and sets per trip were modelled as random numbers, to reflect real world variation in their numbers. The number of vessels was fixed at 50. Catch per set was modelled as a random number with additive components for vessel identity and trip identity. Therefore, catch events included covariation caused by vessel identity and trip identity.
 
-The monitoring scenarios were modelled by randomly sampling sets, trips or vessels for data review. For the trip and vessel scenarios, a bias parameter was included such that review was biased towards trips or vessels with lower than average catch rates.
+The monitoring scenarios were modelled by randomly sampling sets, trips or vessels for data review. For the trip and vessel scenarios, a bias parameter was included such that review was biased towards trips or vessels with lower than average catch rates. We considered three monitoring scenarios, as described in the main text.
 
-The random sampling of fishing activities and catch events was repeated to create 1000 datasets of catch events. Each monitoring scenario was then applied to each of the 1000 fishery datasets. The bias statistics were calculated as the difference between the true catch rate for that dataset and catch rate estimated by the monitoring scenario. The bias statistics therefore represent the difference between the estimated and true catch rates, conditional on each sample of catches. This conditional sampling is reflective of the situation managers face in the real world, where their observed catch rate differs from the true catch rate by an unknown amount. The uncertain intervals across the 1000 simulations therefore represent our uncertainty about the accuracy of catch estimation in the coming year, given we know the number of vessels, but we don't yet know the number of trips, sets or catches those vessels will take.
+The random sampling of fishing activities and catch events was repeated to create 1000 datasets of annual fishing activities. Each monitoring scenario was then applied to each of the 1000 fishery datasets. The bias statistics were calculated as the difference between the true catch rate for that dataset and catch rate estimated by the monitoring scenario. The bias statistics therefore represent the difference between the estimated and true catch rates, conditional on each sample of catches. This conditional sampling is reflective of the situation managers face in the real world, where the observed catch rate differs from the true catch rate by an unknown amount. The uncertain intervals across the 1000 simulations therefore represent our uncertainty about the accuracy of catch estimation in the coming year, given we know the number of vessels, but we don't yet know the number of trips, sets or catches those vessels will take.
 
-All parameters were chosen to be representative of the Western Pacific longline tuna fleets, data given in @brown2021electronic.
+For a given monitoring scenario *M* (Table S2) and catch data *y*, the estimated catch rate per set can be calculated as the average catch per set that was monitored and reviewed:
+
+$$
+\hat{C} = \frac{\sum{(y_{v,t,s} * M_{v,t,s})}}{\sum{M_{v,t,s}}}
+$$
+
+Where $y_{v,t,s}$ is a matrix of catches and $M_{v,t,s}$ is a matrix of 0/1 that indicates whether a given set was monitored and reviewed.
+
+The true catch rate in each scenario, *C* was simply average catch per set.
+
+We calculated two bias statistics, the absolute bias:
+
+$$
+B = C - \hat(C)
+$$
+
+and the bias as a percentage of the catch rate:
+
+$$
+100 * B / C
+$$
+
+The percent bias is what we present above, because it puts all scenarios on the same scale. The absolute bias was much smaller for rarer species and therefore hard to visualize in comparisons.
+
+All parameters were chosen to be representative of the Western Pacific longline tuna fleets, data given in @brown2021electronic, parameters are in Table S3.
 
 **Table S1** Model Equations and parameters of the catch event module
 
@@ -157,57 +179,84 @@ All parameters were chosen to be representative of the Western Pacific longline 
 - $\mu_{v,t}$: Expected catch rate for trip $t$ of vessel $v$\
 - $y_{v,t,s}$: Catch for set $s$ on trip $t$ of vessel $v$
 
-#### Monitoring Module
+**Table S2** Model Equations and parameters of the monitoring module **Table S2** Model Equations and parameters of the monitoring module
 
-The monitoring module determines how monitoring of catches is distributed across the fleet with several parameters:
+| Equation | Description | Parameters |
+|---------------------|---------------------------|-------------------------|
+| $\phi = \text{logit}(p)$ | Logit of base monitoring probability for set-based sampling | $p$: proportion of sets monitored (e.g., 0.3) |
+| $M_{v,t,s} \sim \text{Bernoulli}(\text{logit}^{-1}(\phi))$ | Monitoring indicator for random sampling across sets | $M_{v,t,s}$: 1 if set monitored, 0 otherwise |
+| $\phi_{v,t,s} = \text{logit}(p) + \text{bias}_{vessels} \cdot x_v$ | Logit of monitoring probability for vessel-based sampling, with bias | $\text{bias}_{vessels}$: vessel bias factor, $x_v$: vessel random effect |
+| $M_{v,t,s} \sim \text{Bernoulli}(\text{logit}^{-1}(\phi_{v,t,s}))$ | Monitoring indicator for vessel-based sampling | $M_{v,t,s}$: 1 if set monitored, 0 otherwise |
+| $\phi_{v,t,s} = \text{logit}(p) + \text{bias}_{trip} \cdot z_{v,t}$ | Logit of monitoring probability for trip-based sampling, with bias | $\text{bias}_{trip}$: trip bias factor, $z_{v,t}$: trip random effect |
+| $M_{v,t,s} \sim \text{Bernoulli}(\text{logit}^{-1}(\phi_{v,t,s}))$ | Monitoring indicator for trip-based sampling | $M_{v,t,s}$: 1 if set monitored, 0 otherwise |
 
-**Parameters:** - Total amount of monitoring (percentage of fishing sets monitored) - Distribution of monitoring across fleet components, with option for bias - Coverage within selected units (percentage of trips/sets monitored within selected vessels)
+*Notes:*\
+- $M_{v,t,s}$: Monitoring indicator for set $s$ on trip $t$ of vessel $v$ (1 = monitored, 0 = not monitored)\
+- $p$: Proportion of sets to be monitored and reviewed (review and coverage level)\
+- $\text{bias}_{vessels}$, $\text{bias}_{trip}$: Bias factors for vessel/trip selection (higher values = stronger bias towards lower catch rates)\
+- $x_v$: Vessel-level random effect (from catch model)\
+- $z_{v,t}$: Trip-level random effect (from catch model)
 
-The monitoring module was formulated as follows:
+**Table S3** Fixed parameter values. Fleet specific parameters was based on values from @brown2021electronic.
 
-```         
+| Parameter | Value | Description |
+|-----------------------|------------------|-------------------------------|
+| V | 50 | Number of vessels in the simulated fleet, representative of medium-sized longline fleet |
+| μ^trips^ | 10 | Mean number of trips per vessel per year, based on typical longline operations |
+| θ^trips^ | 1.13 | Dispersion parameter for trips per vessel, allows realistic variation in fishing effort |
+| μ^sets^ | 26 | Mean number of sets per trip, typical for longline tuna fishing |
+| θ^sets^ | 1.8 | Dispersion parameter for sets per trip, reflects operational variation |
+| θ^catch^ | 0.42 | Catch dispersion parameter, controls overdispersion in catch counts |
+| p_monitor | 0.3 | Proportion of sets monitored (e.g. 20%, 30%), as specified by MSC requirements |
 
-# Strategy 1 sampling across sets
-#matrix for storing monitoring status
-M_sets = matrix(V,T,S)
-phi_sets = logit(p_monitor)
-M_sets[v,t,s] ~ dbern(inverse_logit(phi))
+**Table S4** Parameters for monitoring scenarios. Parameters was based on values from @brown2021electronic.
 
-# Strategy 2 sampling random vessels
-M_vessels = matrix(V,T,S)
-phi_vessels = array(dim=c(V,T,S))
-for (v in 1:V) {
-  phi_vessels[v,,] = logit(p_monitor) + bias_v * x[v]
-}
-M_vessels[v,t,s] ~ dbern(inverse_logit(phi_vessels[v,t,s]))
-# Strategy 3: Random selection of trips within vessels
-M_trips = matrix(V,T,S)
-phi_trips = array(dim=c(V,T,S))
-for (v in 1:V) {
-  for (t in 1:T[v]) {
-    phi_trips[v,t,] = logit(p_monitor) + bias_factor * z[v,t]
-  }
-}
-M_trips[v,t,s] ~ dbern(inverse_logit(phi_trips[v,t,s]))
-     
-```
-
-**Parameter Explanations:** - `M_sets`, `M_vessels`, `M_trips`: Matrices indicating monitoring status for each set under different strategies (1 = monitored, 0 = not monitored) - `p_monitor`: Base proportion of sets to be monitored (e.g., 0.3 for 30% coverage) - `phi_sets`, `phi_vessels`, `phi_trips`: Logit-transformed probabilities of monitoring for each strategy - `bias_v`: Bias factor for vessel-based selection (when \> 0, vessels with lower catch rates are more likely selected) - `bias_factor`: Bias factor for trip-based selection (when \> 0, trips with lower catch rates are more likely selected) - `x[v]`: Vessel-level random effect used in the bias mechanism for vessel selection - `z[v,t]`: Trip-level random effect used in the bias mechanism for trip selection
-
-**Bias Mechanism:** - When bias_factor \> 0, vessels/trips with lower catch rates (negative random effects) are more likely to be selected - Higher bias_factor values lead to stronger selection bias - The bias operates through the vessel random effect (x\[v\]) or trip random effect (z\[v,t\]) depending on strategy - logit_inverse(x) = 1/(1+exp(-x)) transforms logit values back to probabilities
-
-**Distribution Strategies:** - Random across sets: Each set has equal probability of being monitored - Random across vessels: Selected vessels have all their sets monitored - Random across trips within vessels: Selected trips have all their sets monitored
-
-### Catch statistic estimation
-
-For a given monitoring strategy `M` and catch data `y`, the estimated catch rate per set can be calculated as follows:
-
-```         
-# Apply monitoring to estimate catch rate
-estimated_catch_rate = sum(y[v,t,s] * M[v,t,s]) / sum(M[v,t,s]) 
-true_catch_rate = sum(y[v,t,s])/prod(dim(y))
-bias = estimated_total_catch - true_total_catch
-bias_percent = bias / true_catch_rate * 100
-```
+| Scenario | Parameter | Value | Description |
+|-----------------|-----------------|-----------------|---------------------|
+| Baseline - YFT | β₀ | 5.6 | Baseline catch rate for common market species (yellowfin tuna) |
+|  | σˣ | 0.41 | Standard deviation of vessel-level variation in catch rates |
+|  | σᶻ | 0.67 | Standard deviation of trip-level variation in catch rates |
+|  | $\text{bias}_{vessels}$ | 0 | No bias in vessel selection (random) |
+|  | $\text{bias}_{trip}$ | 0 | No bias in trip selection (random) |
+| High vessel bias | β₀ | 5.6 | Same baseline catch rate as scenario 1 |
+|  | σˣ | 0.41 | Standard vessel-level variation |
+|  | σᶻ | 0.67 | Standard trip-level variation |
+|  | $\text{bias}_{vessels}$ | -2 | Bias towards vessels with lower catch rates |
+|  | $\text{bias}_{trip}$ | 0 | No bias in trip selection |
+| High trip bias | β₀ | 5.6 | Same baseline catch rate as scenario 1 |
+|  | σˣ | 0.41 | Standard vessel-level variation |
+|  | σᶻ | 0.67 | Standard trip-level variation |
+|  | $\text{bias}_{vessels}$ | 0 | No bias in vessel selection |
+|  | $\text{bias}_{trip}$ | -2 | Strong bias towards trips with lower catch rates |
+| High vessel variance + vessel bias | β₀ | 5.6 | Same baseline catch rate |
+|  | σˣ | 0.82 | Double the vessel-level variation |
+|  | σᶻ | 0.67 | Standard trip-level variation |
+|  | $\text{bias}_{vessels}$ | -2 | Strong bias towards vessels with lower catch rates |
+|  | $\text{bias}_{trip}$ | 0 | No bias in trip selection |
+| High trip variance + trip bias | β₀ | 5.6 | Same baseline catch rate |
+|  | σˣ | 0.41 | Standard vessel-level variation |
+|  | σᶻ | 1.3 | Nearly double the trip-level variation |
+|  | $\text{bias}_{vessels}$ | 0 | No bias in vessel selection |
+|  | $\text{bias}_{trip}$ | -2 | Strong bias towards trips with lower catch rates |
+| Rare species + vessel bias | β₀ | 0.08 | Much lower baseline catch rate for rare bycatch species |
+|  | σˣ | 0.55 | Higher vessel-level variation for rare species |
+|  | σᶻ | 0.65 | Similar trip-level variation |
+|  | $\text{bias}_{vessels}$ | -2 | Strong bias towards vessels with lower catch rates |
+|  | $\text{bias}_{trip}$ | 0 | No bias in trip selection |
+| Very rare species + vessel bias | β₀ | 0.008 | Very low baseline catch rate for very rare species |
+|  | σˣ | 0.55 | Higher vessel-level variation |
+|  | σᶻ | 0.65 | Similar trip-level variation |
+|  | $\text{bias}_{vessels}$ | -2 | Strong bias towards vessels with lower catch rates |
+|  | $\text{bias}_{trip}$ | 0 | No bias in trip selection |
+| Rare species + trip bias | β₀ | 0.08 | Low baseline catch rate for rare species |
+|  | σˣ | 0.55 | Higher vessel-level variation |
+|  | σᶻ | 0.65 | Similar trip-level variation |
+|  | $\text{bias}_{vessels}$ | 0 | No bias in vessel selection |
+|  | $\text{bias}_{trip}$ | -2 | Strong bias towards trips with lower catch rates |
+| Very rare species + trip bias | β₀ | 0.008 | Very low baseline catch rate |
+|  | σˣ | 0.55 | Higher vessel-level variation |
+|  | σᶻ | 0.65 | Similar trip-level variation |
+|  | $\text{bias}_{vessels}$ | 0 | No bias in vessel selection |
+|  | $\text{bias}_{trip}$ | -2 | Strong bias towards trips with lower catch rates |
 
 ## References

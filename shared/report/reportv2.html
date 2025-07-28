@@ -162,8 +162,8 @@ window.Quarto = {
 <h3 class="anchored" data-anchor-id="monitoring-and-review-model">Monitoring and review model</h3>
 <p>We considered different scenarios for <em>monitoring</em> the catch and <em>reviewing</em> the monitoring data. We use the term <em>monitor</em> to refer to vessels/trips/sets that had human or electronic observers present. We use the term <em>review</em> to refer to data that was obtained (e.g.&nbsp;not all electronic video is reviewed). We use the term <em>coverage</em> to indicate the percentage of the sets in a year that were monitored. Review was always of whole sets.</p>
 <p>Our monitoring scenarios were based on reviewing whole sets, whole trips or whole vessels.</p>
-<section id="reviewing-whole-sets" class="level4">
-<h4 class="anchored" data-anchor-id="reviewing-whole-sets">Reviewing whole sets</h4>
+<section id="reviewing-whole-sets-at-random" class="level4">
+<h4 class="anchored" data-anchor-id="reviewing-whole-sets-at-random">Reviewing whole sets at random</h4>
 <ol type="1">
 <li>100% monitoring of fishing with random review of 30% of sets. This scenario is reflective of a fleet with 100% EM coverage and 30% review of those sets.</li>
 </ol>
@@ -228,79 +228,475 @@ window.Quarto = {
 </section>
 <section id="technical-annex" class="level2">
 <h2 class="anchored" data-anchor-id="technical-annex">Technical annex</h2>
-<section id="parameter-calculations" class="level4">
-<h4 class="anchored" data-anchor-id="parameter-calculations">Parameter calculations</h4>
-<p>Parameters were calculated from a longline tuna fleet, data given in <span class="citation" data-cites="brown2021electronic">Brown et al. (<a href="#ref-brown2021electronic" role="doc-biblioref">2021</a>)</span>.</p>
-</section>
-<section id="catch-event-module" class="level4">
-<h4 class="anchored" data-anchor-id="catch-event-module">Catch event module</h4>
-<p><span class="math display">\[ T_{v} = dnegbin(\mu^{trips}, \theta^{trips}) \]</span></p>
+<p>We developed a general model for (1) simulating catch from a year’s worth of fishing activity and (2) simulating monitoring and review of that fishing catch. The model was split into a catch event module that modelled catch per set (Table S1) and a monitoring module that monitored monitoring and review of a sub-sample of all sets (Table S2). Simulation of catch and allocation of monitoring effort were both stochastic. This allowed us to explore how different monitoring scenarios impacted bias in estimated catch rates, with realistic levels of uncertainty. Specifically, our models accounted for uncertainty in: how much fishing activity happens in the coming year, how much catch is taken and by which vessels and on which trips, how monitoring effort is allocated to fishing activities, bias in how monitoring effort is allocated. These different sources of uncertainty were important because a plan for monitoring needs to be made before the fishing activity happens. With our model, we then simulated replicate years of fishing to obtain catch bias estimates along with ranges of variability.</p>
+<p>For the catch model we simulated the number of trips per vessel and number of sets per trip, as well as catch per set. Trips per vessel and sets per trip were modelled as random numbers, to reflect real world variation in their numbers. The number of vessels was fixed at 50. Catch per set was modelled as a random number with additive components for vessel identity and trip identity. Therefore, catch events included covariation caused by vessel identity and trip identity.</p>
+<p>The monitoring scenarios were modelled by randomly sampling sets, trips or vessels for data review. For the trip and vessel scenarios, a bias parameter was included such that review was biased towards trips or vessels with lower than average catch rates. We considered three monitoring scenarios, as described in the main text.</p>
+<p>The random sampling of fishing activities and catch events was repeated to create 1000 datasets of annual fishing activities. Each monitoring scenario was then applied to each of the 1000 fishery datasets. The bias statistics were calculated as the difference between the true catch rate for that dataset and catch rate estimated by the monitoring scenario. The bias statistics therefore represent the difference between the estimated and true catch rates, conditional on each sample of catches. This conditional sampling is reflective of the situation managers face in the real world, where the observed catch rate differs from the true catch rate by an unknown amount. The uncertain intervals across the 1000 simulations therefore represent our uncertainty about the accuracy of catch estimation in the coming year, given we know the number of vessels, but we don’t yet know the number of trips, sets or catches those vessels will take.</p>
+<p>For a given monitoring scenario <em>M</em> (Table S2) and catch data <em>y</em>, the estimated catch rate per set can be calculated as the average catch per set that was monitored and reviewed:</p>
 <p><span class="math display">\[
-x~v = dnorm(0, \sigma_x\^(-2))
+\hat{C} = \frac{\sum{(y_{v,t,s} * M_{v,t,s})}}{\sum{M_{v,t,s}}}
 \]</span></p>
-<p>S[v,t] ~ dnegbin(mu_sets, theta_sets) #sample number of sets on the trip z[v,t] ~ dnorm(0, sigma_z^(-2)) # sample trip level random effect</p>
-<pre><code>mu[v,t] = beta_0 + z[v,t] + x[v] #calculate expected catch rate</code></pre>
-<pre><code>  y[v,t,s] ~ dnegbin(mu[v,t], theta) # sample catch for this set theta is the dispersion parameter</code></pre>
-<p>The model was formulated as follows:</p>
-<pre><code>for (v in 1:V){ # for each vessel
-  
-  for (t in 1:T[v]){ # for each trip this vessel did
-    S[v,t] ~ dnegbin(mu_sets, theta_sets) #sample number of sets on the trip 
-    z[v,t] ~ dnorm(0, sigma_z^(-2)) # sample trip level random effect 
-
-    mu[v,t] = beta_0 + z[v,t] + x[v] #calculate expected catch rate
-
-    for (s in 1:S[v,t]){ # for each set
-      y[v,t,s] ~ dnegbin(mu[v,t], theta) # sample catch for this set theta is the dispersion parameter
-    }
-  }
-}</code></pre>
-<p><strong>Parameter Explanations:</strong> - <code>V</code>: Total number of vessels in the fleet - <code>T[v]</code>: Number of trips taken by vessel v in a year, sampled from a negative binomial distribution - <code>mu_trips</code>: Expected number of trips per vessel per year - <code>theta_trips</code>: Dispersion parameter for the negative binomial distribution of trips - <code>x[v]</code>: Vessel-level random effect for vessel v, sampled from a normal distribution - <code>sigma_x</code>: Standard deviation parameter for the vessel-level random effects - <code>S[v,t]</code>: Number of fishing sets on trip t of vessel v, sampled from a negative binomial distribution - <code>mu_sets</code>: Expected number of sets per trip - <code>theta_sets</code>: Dispersion parameter for the negative binomial distribution of sets - <code>z[v,t]</code>: Trip-level random effect for trip t of vessel v, sampled from a normal distribution - <code>sigma_z</code>: Standard deviation parameter for the trip-level random effects - <code>mu[v,t]</code>: Expected catch rate for trip t of vessel v, combining fixed effect (beta_0) and random effects - <code>beta_0</code>: Baseline expected catch rate (fixed effect) - <code>y[v,t,s]</code>: Observed catch for set s on trip t of vessel v, following a negative binomial distribution - <code>theta</code>: Dispersion parameter for the negative binomial distribution of catch, controlling overdispersion</p>
-<p><strong>Sampling Distributions:</strong> - Catch per set: Negative binomial - Sets per trip and trips per vessel: Negative binomial</p>
-<p>Each sample represents one fishing set (e.g., longline set, purse seine net).</p>
-</section>
-<section id="monitoring-module" class="level4">
-<h4 class="anchored" data-anchor-id="monitoring-module">Monitoring Module</h4>
-<p>The monitoring module determines how monitoring of catches is distributed across the fleet with several parameters:</p>
-<p><strong>Parameters:</strong> - Total amount of monitoring (percentage of fishing sets monitored) - Distribution of monitoring across fleet components, with option for bias - Coverage within selected units (percentage of trips/sets monitored within selected vessels)</p>
-<p>The monitoring module was formulated as follows:</p>
-<pre><code>
-# Strategy 1 sampling across sets
-#matrix for storing monitoring status
-M_sets = matrix(V,T,S)
-phi_sets = logit(p_monitor)
-M_sets[v,t,s] ~ dbern(inverse_logit(phi))
-
-# Strategy 2 sampling random vessels
-M_vessels = matrix(V,T,S)
-phi_vessels = array(dim=c(V,T,S))
-for (v in 1:V) {
-  phi_vessels[v,,] = logit(p_monitor) + bias_v * x[v]
-}
-M_vessels[v,t,s] ~ dbern(inverse_logit(phi_vessels[v,t,s]))
-# Strategy 3: Random selection of trips within vessels
-M_trips = matrix(V,T,S)
-phi_trips = array(dim=c(V,T,S))
-for (v in 1:V) {
-  for (t in 1:T[v]) {
-    phi_trips[v,t,] = logit(p_monitor) + bias_factor * z[v,t]
-  }
-}
-M_trips[v,t,s] ~ dbern(inverse_logit(phi_trips[v,t,s]))
-     </code></pre>
-<p><strong>Parameter Explanations:</strong> - <code>M_sets</code>, <code>M_vessels</code>, <code>M_trips</code>: Matrices indicating monitoring status for each set under different strategies (1 = monitored, 0 = not monitored) - <code>p_monitor</code>: Base proportion of sets to be monitored (e.g., 0.3 for 30% coverage) - <code>phi_sets</code>, <code>phi_vessels</code>, <code>phi_trips</code>: Logit-transformed probabilities of monitoring for each strategy - <code>bias_v</code>: Bias factor for vessel-based selection (when &gt; 0, vessels with lower catch rates are more likely selected) - <code>bias_factor</code>: Bias factor for trip-based selection (when &gt; 0, trips with lower catch rates are more likely selected) - <code>x[v]</code>: Vessel-level random effect used in the bias mechanism for vessel selection - <code>z[v,t]</code>: Trip-level random effect used in the bias mechanism for trip selection</p>
-<p><strong>Bias Mechanism:</strong> - When bias_factor &gt; 0, vessels/trips with lower catch rates (negative random effects) are more likely to be selected - Higher bias_factor values lead to stronger selection bias - The bias operates through the vessel random effect (x[v]) or trip random effect (z[v,t]) depending on strategy - logit_inverse(x) = 1/(1+exp(-x)) transforms logit values back to probabilities</p>
-<p><strong>Distribution Strategies:</strong> - Random across sets: Each set has equal probability of being monitored - Random across vessels: Selected vessels have all their sets monitored - Random across trips within vessels: Selected trips have all their sets monitored</p>
-</section>
-<section id="catch-statistic-estimation" class="level3">
-<h3 class="anchored" data-anchor-id="catch-statistic-estimation">Catch statistic estimation</h3>
-<p>For a given monitoring strategy <code>M</code> and catch data <code>y</code>, the estimated catch rate per set can be calculated as follows:</p>
-<pre><code># Apply monitoring to estimate catch rate
-estimated_catch_rate = sum(y[v,t,s] * M[v,t,s]) / sum(M[v,t,s]) 
-true_catch_rate = sum(y[v,t,s])/prod(dim(y))
-bias = estimated_total_catch - true_total_catch
-bias_percent = bias / true_catch_rate * 100</code></pre>
-</section>
+<p>Where <span class="math inline">\(y_{v,t,s}\)</span> is a matrix of catches and <span class="math inline">\(M_{v,t,s}\)</span> is a matrix of 0/1 that indicates whether a given set was monitored and reviewed.</p>
+<p>The true catch rate in each scenario, <em>C</em> was simply average catch per set.</p>
+<p>We calculated two bias statistics, the absolute bias:</p>
+<p><span class="math display">\[
+B = C - \hat(C)
+\]</span></p>
+<p>and the bias as a percentage of the catch rate:</p>
+<p><span class="math display">\[
+100 * B / C
+\]</span></p>
+<p>The percent bias is what we present above, because it puts all scenarios on the same scale. The absolute bias was much smaller for rarer species and therefore hard to visualize in comparisons.</p>
+<p>All parameters were chosen to be representative of the Western Pacific longline tuna fleets, data given in <span class="citation" data-cites="brown2021electronic">Brown et al. (<a href="#ref-brown2021electronic" role="doc-biblioref">2021</a>)</span>, parameters are in Table S3.</p>
+<p><strong>Table S1</strong> Model Equations and parameters of the catch event module</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 36%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Equation</th>
+<th>Description</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(T_{v} \sim dnegbin(\mu^{trips}, \theta^{trips})\)</span></td>
+<td>Number of trips per vessel per year</td>
+<td><span class="math inline">\(\mu^{trips}\)</span>: mean number of trips per year, <span class="math inline">\(\theta^{trips}\)</span>: dispersion in trips per year</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(x_{v} \sim dnorm(0, \sigma^{x})\)</span></td>
+<td>Vessel-level random effect for catches per set</td>
+<td><span class="math inline">\(\sigma^{x}\)</span>: vessel effect standard deviation</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(S_{v,t} \sim dnegbin(\mu^{sets}, \theta^{sets})\)</span></td>
+<td>Number of sets per trip</td>
+<td><span class="math inline">\(\mu^{sets}\)</span>: mean sets per trip, <span class="math inline">\(\theta^{sets}\)</span>: dispersion in sets per trip</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(z_{v,t} \sim dnorm(0, \sigma^z)\)</span></td>
+<td>Trip-level random effect for catches</td>
+<td><span class="math inline">\(\sigma^z\)</span>: trip effect standard deviation</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\mu_{v,t} = \beta_{0} + z_{v,t} + x_{v}\)</span></td>
+<td>Expected catch rate per set for a given trip</td>
+<td><span class="math inline">\(\beta_{0}\)</span>: baseline catch rate per set</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(y_{v,t,s} \sim dnegbin(\mu_{v,t}, \theta^{catch})\)</span></td>
+<td>Catch per set</td>
+<td><span class="math inline">\(\theta^{catch}\)</span>: catch dispersion</td>
+</tr>
+</tbody>
+</table>
+<p><em>Notes:</em><br>
+- <span class="math inline">\(V\)</span>: Number of vessels<br>
+- <span class="math inline">\(T_{v}\)</span>: Number of trips for vessel <span class="math inline">\(v\)</span><br>
+- <span class="math inline">\(S_{v,t}\)</span>: Number of sets for trip <span class="math inline">\(t\)</span> of vessel <span class="math inline">\(v\)</span><br>
+- <span class="math inline">\(x_{v}\)</span>: Vessel random effect<br>
+- <span class="math inline">\(z_{v,t}\)</span>: Trip random effect<br>
+- <span class="math inline">\(\mu_{v,t}\)</span>: Expected catch rate for trip <span class="math inline">\(t\)</span> of vessel <span class="math inline">\(v\)</span><br>
+- <span class="math inline">\(y_{v,t,s}\)</span>: Catch for set <span class="math inline">\(s\)</span> on trip <span class="math inline">\(t\)</span> of vessel <span class="math inline">\(v\)</span></p>
+<p><strong>Table S2</strong> Model Equations and parameters of the monitoring module <strong>Table S2</strong> Model Equations and parameters of the monitoring module</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 36%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Equation</th>
+<th>Description</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\phi = \text{logit}(p)\)</span></td>
+<td>Logit of base monitoring probability for set-based sampling</td>
+<td><span class="math inline">\(p\)</span>: proportion of sets monitored (e.g., 0.3)</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(M_{v,t,s} \sim \text{Bernoulli}(\text{logit}^{-1}(\phi))\)</span></td>
+<td>Monitoring indicator for random sampling across sets</td>
+<td><span class="math inline">\(M_{v,t,s}\)</span>: 1 if set monitored, 0 otherwise</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\phi_{v,t,s} = \text{logit}(p) + \text{bias}_{vessels} \cdot x_v\)</span></td>
+<td>Logit of monitoring probability for vessel-based sampling, with bias</td>
+<td><span class="math inline">\(\text{bias}_{vessels}\)</span>: vessel bias factor, <span class="math inline">\(x_v\)</span>: vessel random effect</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(M_{v,t,s} \sim \text{Bernoulli}(\text{logit}^{-1}(\phi_{v,t,s}))\)</span></td>
+<td>Monitoring indicator for vessel-based sampling</td>
+<td><span class="math inline">\(M_{v,t,s}\)</span>: 1 if set monitored, 0 otherwise</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\phi_{v,t,s} = \text{logit}(p) + \text{bias}_{trip} \cdot z_{v,t}\)</span></td>
+<td>Logit of monitoring probability for trip-based sampling, with bias</td>
+<td><span class="math inline">\(\text{bias}_{trip}\)</span>: trip bias factor, <span class="math inline">\(z_{v,t}\)</span>: trip random effect</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(M_{v,t,s} \sim \text{Bernoulli}(\text{logit}^{-1}(\phi_{v,t,s}))\)</span></td>
+<td>Monitoring indicator for trip-based sampling</td>
+<td><span class="math inline">\(M_{v,t,s}\)</span>: 1 if set monitored, 0 otherwise</td>
+</tr>
+</tbody>
+</table>
+<p><em>Notes:</em><br>
+- <span class="math inline">\(M_{v,t,s}\)</span>: Monitoring indicator for set <span class="math inline">\(s\)</span> on trip <span class="math inline">\(t\)</span> of vessel <span class="math inline">\(v\)</span> (1 = monitored, 0 = not monitored)<br>
+- <span class="math inline">\(p\)</span>: Proportion of sets to be monitored and reviewed (review and coverage level)<br>
+- <span class="math inline">\(\text{bias}_{vessels}\)</span>, <span class="math inline">\(\text{bias}_{trip}\)</span>: Bias factors for vessel/trip selection (higher values = stronger bias towards lower catch rates)<br>
+- <span class="math inline">\(x_v\)</span>: Vessel-level random effect (from catch model)<br>
+- <span class="math inline">\(z_{v,t}\)</span>: Trip-level random effect (from catch model)</p>
+<p><strong>Table S3</strong> Fixed parameter values. Fleet specific parameters was based on values from <span class="citation" data-cites="brown2021electronic">Brown et al. (<a href="#ref-brown2021electronic" role="doc-biblioref">2021</a>)</span>.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 25%">
+<col style="width: 43%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>V</td>
+<td>50</td>
+<td>Number of vessels in the simulated fleet, representative of medium-sized longline fleet</td>
+</tr>
+<tr class="even">
+<td>μ<sup>trips</sup></td>
+<td>10</td>
+<td>Mean number of trips per vessel per year, based on typical longline operations</td>
+</tr>
+<tr class="odd">
+<td>θ<sup>trips</sup></td>
+<td>1.13</td>
+<td>Dispersion parameter for trips per vessel, allows realistic variation in fishing effort</td>
+</tr>
+<tr class="even">
+<td>μ<sup>sets</sup></td>
+<td>26</td>
+<td>Mean number of sets per trip, typical for longline tuna fishing</td>
+</tr>
+<tr class="odd">
+<td>θ<sup>sets</sup></td>
+<td>1.8</td>
+<td>Dispersion parameter for sets per trip, reflects operational variation</td>
+</tr>
+<tr class="even">
+<td>θ<sup>catch</sup></td>
+<td>0.42</td>
+<td>Catch dispersion parameter, controls overdispersion in catch counts</td>
+</tr>
+<tr class="odd">
+<td>p_monitor</td>
+<td>0.3</td>
+<td>Proportion of sets monitored (e.g.&nbsp;20%, 30%), as specified by MSC requirements</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table S4</strong> Parameters for monitoring scenarios. Parameters was based on values from <span class="citation" data-cites="brown2021electronic">Brown et al. (<a href="#ref-brown2021electronic" role="doc-biblioref">2021</a>)</span>.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Scenario</th>
+<th>Parameter</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Baseline - YFT</td>
+<td>β₀</td>
+<td>5.6</td>
+<td>Baseline catch rate for common market species (yellowfin tuna)</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>σˣ</td>
+<td>0.41</td>
+<td>Standard deviation of vessel-level variation in catch rates</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>σᶻ</td>
+<td>0.67</td>
+<td>Standard deviation of trip-level variation in catch rates</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{vessels}\)</span></td>
+<td>0</td>
+<td>No bias in vessel selection (random)</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{trip}\)</span></td>
+<td>0</td>
+<td>No bias in trip selection (random)</td>
+</tr>
+<tr class="even">
+<td>High vessel bias</td>
+<td>β₀</td>
+<td>5.6</td>
+<td>Same baseline catch rate as scenario 1</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>σˣ</td>
+<td>0.41</td>
+<td>Standard vessel-level variation</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>σᶻ</td>
+<td>0.67</td>
+<td>Standard trip-level variation</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{vessels}\)</span></td>
+<td>-2</td>
+<td>Bias towards vessels with lower catch rates</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{trip}\)</span></td>
+<td>0</td>
+<td>No bias in trip selection</td>
+</tr>
+<tr class="odd">
+<td>High trip bias</td>
+<td>β₀</td>
+<td>5.6</td>
+<td>Same baseline catch rate as scenario 1</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>σˣ</td>
+<td>0.41</td>
+<td>Standard vessel-level variation</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>σᶻ</td>
+<td>0.67</td>
+<td>Standard trip-level variation</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{vessels}\)</span></td>
+<td>0</td>
+<td>No bias in vessel selection</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{trip}\)</span></td>
+<td>-2</td>
+<td>Strong bias towards trips with lower catch rates</td>
+</tr>
+<tr class="even">
+<td>High vessel variance + vessel bias</td>
+<td>β₀</td>
+<td>5.6</td>
+<td>Same baseline catch rate</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>σˣ</td>
+<td>0.82</td>
+<td>Double the vessel-level variation</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>σᶻ</td>
+<td>0.67</td>
+<td>Standard trip-level variation</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{vessels}\)</span></td>
+<td>-2</td>
+<td>Strong bias towards vessels with lower catch rates</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{trip}\)</span></td>
+<td>0</td>
+<td>No bias in trip selection</td>
+</tr>
+<tr class="odd">
+<td>High trip variance + trip bias</td>
+<td>β₀</td>
+<td>5.6</td>
+<td>Same baseline catch rate</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>σˣ</td>
+<td>0.41</td>
+<td>Standard vessel-level variation</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>σᶻ</td>
+<td>1.3</td>
+<td>Nearly double the trip-level variation</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{vessels}\)</span></td>
+<td>0</td>
+<td>No bias in vessel selection</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{trip}\)</span></td>
+<td>-2</td>
+<td>Strong bias towards trips with lower catch rates</td>
+</tr>
+<tr class="even">
+<td>Rare species + vessel bias</td>
+<td>β₀</td>
+<td>0.08</td>
+<td>Much lower baseline catch rate for rare bycatch species</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>σˣ</td>
+<td>0.55</td>
+<td>Higher vessel-level variation for rare species</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>σᶻ</td>
+<td>0.65</td>
+<td>Similar trip-level variation</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{vessels}\)</span></td>
+<td>-2</td>
+<td>Strong bias towards vessels with lower catch rates</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{trip}\)</span></td>
+<td>0</td>
+<td>No bias in trip selection</td>
+</tr>
+<tr class="odd">
+<td>Very rare species + vessel bias</td>
+<td>β₀</td>
+<td>0.008</td>
+<td>Very low baseline catch rate for very rare species</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>σˣ</td>
+<td>0.55</td>
+<td>Higher vessel-level variation</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>σᶻ</td>
+<td>0.65</td>
+<td>Similar trip-level variation</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{vessels}\)</span></td>
+<td>-2</td>
+<td>Strong bias towards vessels with lower catch rates</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{trip}\)</span></td>
+<td>0</td>
+<td>No bias in trip selection</td>
+</tr>
+<tr class="even">
+<td>Rare species + trip bias</td>
+<td>β₀</td>
+<td>0.08</td>
+<td>Low baseline catch rate for rare species</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>σˣ</td>
+<td>0.55</td>
+<td>Higher vessel-level variation</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>σᶻ</td>
+<td>0.65</td>
+<td>Similar trip-level variation</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{vessels}\)</span></td>
+<td>0</td>
+<td>No bias in vessel selection</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{trip}\)</span></td>
+<td>-2</td>
+<td>Strong bias towards trips with lower catch rates</td>
+</tr>
+<tr class="odd">
+<td>Very rare species + trip bias</td>
+<td>β₀</td>
+<td>0.008</td>
+<td>Very low baseline catch rate</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>σˣ</td>
+<td>0.55</td>
+<td>Higher vessel-level variation</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>σᶻ</td>
+<td>0.65</td>
+<td>Similar trip-level variation</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{vessels}\)</span></td>
+<td>0</td>
+<td>No bias in vessel selection</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><span class="math inline">\(\text{bias}_{trip}\)</span></td>
+<td>-2</td>
+<td>Strong bias towards trips with lower catch rates</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="references" class="level2 unnumbered">
 
