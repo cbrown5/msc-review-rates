@@ -6,64 +6,56 @@ library(tidyverse)
 library(ggplot2)
 library(gridExtra)
 library(ggthemes)
+library(patchwork)
 theme_set(theme_classic())
 
 # Read simulation results
-results_summary <- read.csv("outputs/simulation_results_summary_tidy-20perc.csv")
+results_summary <- read.csv("outputs/simulation_results_summary_tidy.csv") %>%
+  filter(p_monitor == 0.3)
 
 
 scnrs_to_plot <- data.frame(
+  strategy = c("sets", "trips", "vessels", "trips", "vessels"), 
   description = c(
-    "Baseline - YFT", "Baseline - YFT", "Baseline - YFT",
-    "High trip bias",
-    "High trip variance + trip bias",
-    "High vessel bias",
-    "High vessel variance + vessel bias",
-    "Rare species + trip bias",
-    "Rare species + vessel bias",
-    "Very rare species+ trip bias",
-    "Very rare species+ vessel bias"
-  ),
-  strategy = c(
-    "sets", "trips", "vessels",
-    "trips",
-    "trips",
-    "vessels",
-    "vessels",
-    "trips",
-    "vessels",
-    "trips",
-    "vessels"
-  )
+      rep("Baseline", 3),
+      "Trip bias", 
+      "Vessel bias"
+)
 )
 
-#UP TO HERE add strategies to scnrs to plot
+spp_scnrs_to_plot <- merge(scnrs_to_plot, data.frame(species = unique(results_summary$species)),
+      by = NULL) %>%
+      arrange(strategy)
 
 results_plot <- results_summary %>%
-  inner_join(scnrs_to_plot) %>%
-  # change description for "Baseline - YFT" to "Baseline {monitoring strategy}
-  mutate(description = ifelse(description == "Baseline - YFT",
-    paste("Baseline - ", strategy), description
-  ))
-# Order x-axis by monitoring strategy
-results_plot <- results_plot %>%
-  mutate(description = factor(description, levels = results_plot %>%
-    arrange(strategy, description) %>%
-    distinct(description) %>%
-    pull(description)))
+  inner_join(spp_scnrs_to_plot) 
 
-plot_bias_percent <- ggplot(results_plot, aes(x = description, y = mean_bias_percent, color = strategy)) +
+yaxis_scale <- c(-90, 40)
+
+# I want to make three plots. These will follow the same template as teh ggplot I already have. But I want one plot for each strategy (sets, trips, vessels). For the trip and vessel plots also include the sets strategy for each species, as a reference. 
+
+# Create data for each plot
+
+#
+# Sets plot - only sets strategy
+#
+results_sets <- results_plot %>%
+  filter(strategy == "sets") %>%
+  mutate(x_axis = paste(species, description, sep = " - ")) %>%
+    arrange(species, description) 
+
+plot_sets <- ggplot(results_sets, aes(x = species, y = mean_bias_percent, color = description)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
   geom_point(size = 3.5, position = position_dodge(width = 0.5)) +
   geom_errorbar(aes(ymin = lower_ci_mean_bias_percent, ymax = upper_ci_mean_bias_percent),
     position = position_dodge(width = 0.5), width = 0.25
   ) +
   labs(
-    title = "Percent Bias in Catch Rate Estimation",
-    subtitle = "By Monitoring Strategy",
-    x = "", y = "Percent Bias (%)", color = "Monitoring Strategy"
+    title = "Sets Scenario: Percent Bias in Catch Rate Estimation",
+    x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
   ) +
   scale_color_canva() +
+  scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 40, 20)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
     axis.text.y = element_text(size = 14),
@@ -73,12 +65,113 @@ plot_bias_percent <- ggplot(results_plot, aes(x = description, y = mean_bias_per
     legend.text = element_text(size = 14),
     legend.position = "top",
     plot.margin = margin(10, 10, 10, 15),
-    panel.grid.minor = element_blank(),
-    panel.spacing = unit(1, "lines")
+    panel.grid.minor = element_blank()
   )
+plot_sets
 
-plot_bias_percent
+#
+# Trips plot - trips and sets strategies
+#
 
-# Save the plot
-ggsave("plots/plot_bias_percent.png", plot = plot_bias_percent,
-       width = 10, height = 6, dpi = 300)
+results_trips <- results_plot %>%
+  filter(strategy %in% c("sets", "trips"))%>%
+  mutate(
+    colour_scale = str_to_title(paste(strategy, description, sep = " - "))
+  ) %>%
+  arrange(species, description) 
+    
+pd2 <- position_dodge(width = 0.5)
+
+plot_trips <- ggplot(results_trips) + 
+  aes(x = species, y = mean_bias_percent, color = colour_scale,
+  group = colour_scale) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  geom_point(size = 3.5, position = pd2) +
+  geom_errorbar(aes(ymin = lower_ci_mean_bias_percent, ymax = upper_ci_mean_bias_percent),
+    position = pd2, width = 0.25) +
+  labs(
+    title = "Trips Scenario: Percent Bias in Catch Rate Estimation",
+    subtitle = "With Sets Scenario as Reference",
+    x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
+  ) +
+  scale_color_canva() +
+  scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 40, 20)) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
+    axis.text.y = element_text(size = 14),
+    axis.title = element_text(size = 13, face = "bold"),
+    title = element_text(size = 14, face = "bold"),
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 14),
+    legend.position = "top",
+    plot.margin = margin(10, 10, 10, 15),
+    panel.grid.minor = element_blank()
+  )
+plot_trips
+
+#
+# Vessels plot - vessels and sets strategies
+#
+
+results_vessels <- results_plot %>%
+  filter(strategy %in% c("sets", "vessels")) %>%
+  mutate(
+    colour_scale = str_to_title(paste(strategy, description, sep = " - "))
+  ) %>%
+  arrange(species, description)
+
+pd3 <- position_dodge(width = 0.5)
+plot_vessels <- ggplot(results_vessels) + 
+  aes(x = species, y = mean_bias_percent, color = colour_scale,
+  group = colour_scale) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  geom_point(size = 3.5, position = pd3) +
+  geom_errorbar(aes(ymin = lower_ci_mean_bias_percent, ymax = upper_ci_mean_bias_percent),
+    position = pd3, width = 0.25) +
+  labs(
+    title = "Vessels Scenario: Percent Bias in Catch Rate Estimation",
+    subtitle = "With Sets Scenario as Reference",
+    x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
+  ) +
+  scale_color_canva() +
+  scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 40, 20)) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
+    axis.text.y = element_text(size = 14),
+    axis.title = element_text(size = 13, face = "bold"),
+    title = element_text(size = 14, face = "bold"),
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 14),
+    legend.position = "top",
+    plot.margin = margin(10, 10, 10, 15),
+    panel.grid.minor = element_blank()
+  )
+plot_vessels
+
+#
+# Make a patchwork of the three plots
+#
+
+combined_plot <- plot_sets + plot_trips + plot_vessels +
+  plot_layout(ncol = 3) +
+  plot_annotation(
+    title = "Percent Bias in Catch Rate Estimation by Monitoring Scenario",
+    subtitle = "Comparison of Sets, Trips, and Vessels Strategies",
+    theme = theme(plot.title = element_text(size = 16, face = "bold"),
+                  plot.subtitle = element_text(size = 14))
+  )
+combined_plot
+# Save the plots
+ggsave("plots/plot_bias_percent_sets.png", plot = plot_sets,
+       width = 8, height = 9, dpi = 300)
+ggsave("plots/plot_bias_percent_trips.png", plot = plot_trips,
+       width = 8, height = 9, dpi = 300)
+ggsave("plots/plot_bias_percent_vessels.png", plot = plot_vessels,
+       width = 8, height = 9, dpi = 300)
+
+      ggsave("plots/plot_bias_percent_sets.pdf", plot = plot_sets,
+        width = 8, height = 9)
+      ggsave("plots/plot_bias_percent_trips.pdf", plot = plot_trips,
+        width = 8, height = 9)
+      ggsave("plots/plot_bias_percent_vessels.pdf", plot = plot_vessels,
+        width = 8, height = 9)

@@ -19,7 +19,7 @@ mutate(parameter_set_id = row_number())
 
 # params_df <- params_df[1:3,]
 #Number of replications
-n_replications <- 500
+n_replications <- 1000
 
 # Initialize results storage
 all_results <- list()
@@ -91,4 +91,3 @@ summary_results_df <- do.call(rbind, summary_results) %>%
 write.csv(all_results_df, "outputs/simulation_results_full_tidy.csv", row.names = FALSE)
 write.csv(summary_results_df, "outputs/simulation_results_summary_tidy.csv", row.names = FALSE)
 
-cat("Simulations complete. Tidy results saved to CSV files.\n")

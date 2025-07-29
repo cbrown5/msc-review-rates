@@ -2,6 +2,9 @@
 simulation_results_full_tidy.csv
 
 timeline.md
+*.pdf
+
+*.html
 
 # History files
 .Rhistory
