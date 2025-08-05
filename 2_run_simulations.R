@@ -71,7 +71,7 @@ simulation_results <- parallel::mclapply(1:nrow(params_df), function(x) {
 mc.cores = 8, mc.set.seed = FALSE)
 )
 
-# # Version if parallel::mclapply is not available
+# # # Version if parallel::mclapply is not available
 # simulation_results <- lapply(1:nrow(params_df), function(x) {
 #   params <- params_df[x, ]
 #   cat("Running parameter set", params$parameter_set_id, "of", nrow(params_df), "\n")

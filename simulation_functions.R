@@ -229,10 +229,13 @@ simulate_catches <- function(params, fleet_structure, random_effects) {
 #' Apply random monitoring across sets using tidy format
 #' @param catches_df Tidy dataframe of catches
 #' @param p_monitor Proportion of sets to be monitored
+#' @param p_sets_select Proportion of sets to select within each group (included here for consistency of sample size with other monitoring scenarios)
 #' @return Dataframe with monitoring status added
-apply_set_monitoring_tidy <- function(catches_df, p_monitor) {
+apply_set_monitoring_tidy <- function(catches_df, p_monitor, p_sets_select = 1) {
   # Generate random monitoring status for each set
-  set.seed(42)  # For reproducibility
+  # set.seed(42)  # For reproducibility
+  #update p_monitor to standardize with p_sets_select
+  p_monitor <- p_monitor * p_sets_select
   catches_df$monitored <- rbinom(nrow(catches_df), 1, p_monitor)
   catches_df$strategy <- "sets"
   
@@ -243,8 +246,9 @@ apply_set_monitoring_tidy <- function(catches_df, p_monitor) {
 #' @param catches_df Tidy dataframe of catches
 #' @param p_monitor Proportion of sets to be monitored
 #' @param bias_v Bias factor for vessel selection
+#' @param p_sets_select Proportion of sets to select within each monitored vessel
 #' @return Dataframe with monitoring status added
-apply_vessel_monitoring_tidy <- function(catches_df, p_monitor, bias_v = 0) {
+apply_vessel_monitoring_tidy <- function(catches_df, p_monitor, bias_v = 0, p_sets_select = 1) {
   # Get unique vessels
   vessels <- unique(catches_df$vessel_id)
   
@@ -257,14 +261,24 @@ apply_vessel_monitoring_tidy <- function(catches_df, p_monitor, bias_v = 0) {
   phi_vessels <- plogis(qlogis(p_monitor) + bias_v * vessel_effects)
   
   # Select vessels for monitoring based on biased probabilities
-  set.seed(42)  # For reproducibility
+  # set.seed(42)  # For reproducibility
   vessel_monitored <- rbinom(length(vessels), 1, phi_vessels)
   names(vessel_monitored) <- vessels
-  
+  monitored_vessels <- vessels[vessel_monitored == 1]
+catches_df$monitored <- 0
   # Apply monitoring status to each row based on vessel
-  catches_df$monitored <- sapply(catches_df$vessel_id, function(v) {
-    vessel_monitored[as.character(v)]
-  })
+  for (vessel in monitored_vessels) {
+    # Get all sets for this vessel
+    vessel_rows <- which(catches_df$vessel_id == vessel)
+    
+    # Randomly select sets within this vessel according to p_sets_within_vessel
+    n_sets <- length(vessel_rows)
+    n_sets_to_monitor <- round(n_sets * p_sets_select)
+    if (n_sets_to_monitor > 0) {
+      monitored_rows <- sample(vessel_rows, n_sets_to_monitor)
+      catches_df$monitored[monitored_rows] <- 1
+    }
+  }
   
   catches_df$strategy <- "vessels"
   
@@ -275,8 +289,9 @@ apply_vessel_monitoring_tidy <- function(catches_df, p_monitor, bias_v = 0) {
 #' @param catches_df Tidy dataframe of catches
 #' @param p_monitor Proportion of sets to be monitored
 #' @param bias_factor Bias factor for trip selection
+#' @param p_sets_select Proportion of sets to select within each monitored trip
 #' @return Dataframe with monitoring status added
-apply_trip_monitoring_tidy <- function(catches_df, p_monitor, bias_factor = 0) {
+apply_trip_monitoring_tidy <- function(catches_df, p_monitor, bias_factor = 0, p_sets_select = 1) {
   # Create a dataframe of unique vessel-trip combinations with their trip effects
   trips <- unique(catches_df[, c("vessel_id", "trip_id", "trip_effect")])
   
@@ -284,16 +299,29 @@ apply_trip_monitoring_tidy <- function(catches_df, p_monitor, bias_factor = 0) {
   trips$phi_trip <- plogis(qlogis(p_monitor) + bias_factor * trips$trip_effect)
   
   # Select trips for monitoring based on biased probabilities
-  set.seed(42)  # For reproducibility
+  # set.seed(42)  # For reproducibility
   trips$monitored <- rbinom(nrow(trips), 1, trips$phi_trip)
   
-  # Merge monitoring status back to original dataframe
-  catches_df$monitored <- NA
-  for (i in 1:nrow(trips)) {
-    v <- trips$vessel_id[i]
-    t <- trips$trip_id[i]
-    m <- trips$monitored[i]
-    catches_df$monitored[catches_df$vessel_id == v & catches_df$trip_id == t] <- m
+  # Initialize monitoring status
+  catches_df$monitored <- 0
+  
+  # Apply monitoring status to each row based on trip
+  monitored_trips <- trips[trips$monitored == 1, ]
+  
+  for (i in 1:nrow(monitored_trips)) {
+    v <- monitored_trips$vessel_id[i]
+    t <- monitored_trips$trip_id[i]
+    
+    # Get all sets for this trip
+    trip_rows <- which(catches_df$vessel_id == v & catches_df$trip_id == t)
+    
+    # Randomly select sets within this trip according to p_sets_select
+    n_sets <- length(trip_rows)
+    n_sets_to_monitor <- round(n_sets * p_sets_select)
+    if (n_sets_to_monitor > 0) {
+      monitored_rows <- sample(trip_rows, n_sets_to_monitor)
+      catches_df$monitored[monitored_rows] <- 1
+    }
   }
   
   catches_df$strategy <- "trips"

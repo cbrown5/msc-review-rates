@@ -28,11 +28,16 @@ spp_scnrs_to_plot <- merge(scnrs_to_plot, data.frame(species = unique(results_su
       arrange(strategy)
 
 results_plot <- results_summary %>%
-  inner_join(spp_scnrs_to_plot) 
+  inner_join(spp_scnrs_to_plot)  %>%
+  # change description labels
+  mutate(description = case_when(
+    description == "Baseline" ~ "Random sets",
+    description == "Trip bias" ~ "Trip bias",
+    description == "Vessel bias" ~ "Vessel bias",
+    TRUE ~ description
+  ))
 
-yaxis_scale <- c(-90, 40)
-
-# I want to make three plots. These will follow the same template as teh ggplot I already have. But I want one plot for each strategy (sets, trips, vessels). For the trip and vessel plots also include the sets strategy for each species, as a reference. 
+yaxis_scale <- c(-90, 70)
 
 # Create data for each plot
 
@@ -55,7 +60,7 @@ plot_sets <- ggplot(results_sets, aes(x = species, y = mean_bias_percent, color 
     x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
   ) +
   scale_color_canva() +
-  scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 40, 20)) +
+  scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 60, 20)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
     axis.text.y = element_text(size = 14),
@@ -76,7 +81,11 @@ plot_sets
 results_trips <- results_plot %>%
   filter(strategy %in% c("sets", "trips"))%>%
   mutate(
-    colour_scale = str_to_title(paste(strategy, description, sep = " - "))
+    colour_scale = str_to_title(paste(strategy, description, sep = " - ")),
+    colour_scale = case_when(colour_scale == "Sets - Random Sets" ~ "Random Sets",
+       colour_scale == "Trips - Random Sets" ~ "Randomly selected \n trips",
+       colour_scale == "Trips - Trip Bias" ~ "Bias to low \n catch rate trips",
+       TRUE ~ colour_scale)
   ) %>%
   arrange(species, description) 
     
@@ -95,14 +104,14 @@ plot_trips <- ggplot(results_trips) +
     x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
   ) +
   scale_color_canva() +
-  scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 40, 20)) +
+  scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 60, 20)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
     axis.text.y = element_text(size = 14),
     axis.title = element_text(size = 13, face = "bold"),
     title = element_text(size = 14, face = "bold"),
     legend.title = element_text(size = 12, face = "bold"),
-    legend.text = element_text(size = 14),
+    legend.text = element_text(size = 12),
     legend.position = "top",
     plot.margin = margin(10, 10, 10, 15),
     panel.grid.minor = element_blank()
@@ -134,14 +143,14 @@ plot_vessels <- ggplot(results_vessels) +
     x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
   ) +
   scale_color_canva() +
-  scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 40, 20)) +
+  scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 60, 20)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
     axis.text.y = element_text(size = 14),
     axis.title = element_text(size = 13, face = "bold"),
     title = element_text(size = 14, face = "bold"),
     legend.title = element_text(size = 12, face = "bold"),
-    legend.text = element_text(size = 14),
+    legend.text = element_text(size = 12),
     legend.position = "top",
     plot.margin = margin(10, 10, 10, 15),
     panel.grid.minor = element_blank()

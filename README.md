@@ -1,11 +1,5 @@
 # msc-review-rates
 
-## TODO
-Update model for simulating sets per trip? 
-Add technical annex to document. 
-Note for editing parameters - sigma_z is trip variancSD, sigma_x is vessel SD
-
-
 ### Scientific Context
 
 The Marine Stewardship Council (MSC) requires fisheries to monitor fishing effort with a nominal 30% monitoring coverage rule. However, they haven't specified how that 30% should be distributed across the fleet. There's concern that fishing fleets may select their best 30% of vessels (those with low rates of bycatch) for monitoring, resulting in biased outcomes in terms of estimated bycatch rates versus actual rates.
