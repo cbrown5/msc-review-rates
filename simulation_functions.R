@@ -380,9 +380,9 @@ run_single_simulation_tidy <- function(params, rep) {
   catches_df <- sim_data$catches_df
   
   # Apply monitoring strategies
-  catches_set <- apply_set_monitoring_tidy(catches_df, params$p_monitor)
-  catches_vessel <- apply_vessel_monitoring_tidy(catches_df, params$p_monitor, params$bias_v)
-  catches_trip <- apply_trip_monitoring_tidy(catches_df, params$p_monitor, params$bias_factor)
+  catches_set <- apply_set_monitoring_tidy(catches_df, params$p_monitor, params$p_sets_select)
+  catches_vessel <- apply_vessel_monitoring_tidy(catches_df, params$p_monitor, params$bias_v, params$p_sets_select)
+  catches_trip <- apply_trip_monitoring_tidy(catches_df, params$p_monitor, params$bias_factor, params$p_sets_select)
   
   # Estimate catch statistics
   stats_sets <- estimate_catch_statistics_tidy(catches_set)
