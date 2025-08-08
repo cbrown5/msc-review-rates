@@ -1,9 +1,3 @@
-TODO:
-Need to check p_sets_select is working properly (results don't look right? )
-Update documentation for p_sets_select
-Work on plots for catch missed. 
-
-
 
 For 1B: thanks for re-running the simulation. The specific real-world scenario we’re interested in is comparison of 1) monitoring 30% of vessels and reviewing 100% of sets that are monitored with 2) monitoring 30% of vessels and reviewing 20% of sets that are monitored. This is because this is a common way the MSC guidance is interpreted. Is it possible to re-run the simulation for this comparison?
 

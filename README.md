@@ -77,6 +77,7 @@ The monitoring module determines how monitoring of catches is distributed across
 - Total amount of monitoring (percentage of fishing sets monitored)
 - Distribution of monitoring across fleet components, with option for bias
 - Coverage within selected units (percentage of trips/sets monitored within selected vessels)
+- Proportion of sets to select within each monitored unit (vessel/trip)
 
 The monitoring module was formulated as follows:
 
@@ -85,7 +86,7 @@ The monitoring module was formulated as follows:
 # Strategy 1 sampling across sets
 #matrix for storing monitoring status
 M_sets = matrix(V,T,S)
-phi_sets = logit(p_monitor)
+phi_sets = logit(p_monitor * p_sets_select)
 M_sets[v,t,s] ~ dbern(inverse_logit(phi))
 
 # Strategy 2 sampling random vessels
@@ -93,14 +94,17 @@ M_vessels = matrix(V,T,S)
 phi_vessels = array(dim=c(V,T,S))
 for (v in 1:V) {
   phi_vessels[v,,] = logit(p_monitor) + bias_v * x[v]
+  # Then select p_sets_select proportion within monitored vessels
 }
 M_vessels[v,t,s] ~ dbern(inverse_logit(phi_vessels[v,t,s]))
+
 # Strategy 3: Random selection of trips within vessels
 M_trips = matrix(V,T,S)
 phi_trips = array(dim=c(V,T,S))
 for (v in 1:V) {
   for (t in 1:T[v]) {
     phi_trips[v,t,] = logit(p_monitor) + bias_factor * z[v,t]
+    # Then select p_sets_select proportion within monitored trips
   }
 }
 M_trips[v,t,s] ~ dbern(inverse_logit(phi_trips[v,t,s]))
@@ -110,6 +114,7 @@ M_trips[v,t,s] ~ dbern(inverse_logit(phi_trips[v,t,s]))
 **Parameter Explanations:**
 - `M_sets`, `M_vessels`, `M_trips`: Matrices indicating monitoring status for each set under different strategies (1 = monitored, 0 = not monitored)
 - `p_monitor`: Base proportion of sets to be monitored (e.g., 0.3 for 30% coverage)
+- `p_sets_select`: Proportion of sets to select within each monitored vessel or trip (e.g., 0.2 to select 20% of sets within monitored units)
 - `phi_sets`, `phi_vessels`, `phi_trips`: Logit-transformed probabilities of monitoring for each strategy
 - `bias_v`: Bias factor for vessel-based selection (when > 0, vessels with lower catch rates are more likely selected)
 - `bias_factor`: Bias factor for trip-based selection (when > 0, trips with lower catch rates are more likely selected)
@@ -123,9 +128,14 @@ M_trips[v,t,s] ~ dbern(inverse_logit(phi_trips[v,t,s]))
 - logit_inverse(x) = 1/(1+exp(-x)) transforms logit values back to probabilities
 
 **Distribution Strategies:**
-- Random across sets: Each set has equal probability of being monitored
-- Random across vessels: Selected vessels have all their sets monitored
-- Random across trips within vessels: Selected trips have all their sets monitored
+- Random across sets: Each set has equal probability of being monitored (p_monitor * p_sets_select)
+- Random across vessels: Selected vessels have a proportion (p_sets_select) of their sets monitored
+- Random across trips within vessels: Selected trips have a proportion (p_sets_select) of their sets monitored
+
+**p_sets_select Parameter:**
+- When p_sets_select = 1: All sets within selected vessels/trips are monitored (traditional approach)
+- When p_sets_select < 1: Only a random subset of sets within selected vessels/trips are monitored
+- This parameter allows modeling partial monitoring within selected units, which may be more realistic for electronic monitoring systems
 
 ### Catch statistic estimation
 
@@ -154,23 +164,47 @@ Note we also drafted a report, however this draft was finalized on another platf
 
 #### R Scripts
 
-1. **`1_run_simulations.R`**
+1. **`1_conceptual_figure.R`**
+   - **Purpose**: Generates conceptual figures illustrating different monitoring strategies
+   - **Usage**: 
+     ```bash
+     Rscript 1_conceptual_figure.R
+     ```
+   - Creates visualizations that explain the conceptual framework of monitoring strategies and their impact on estimated catch rates.
+
+2. **`2_run_simulations.R`**
    - **Purpose**: Main script to run the full simulation with multiple parameter sets
    - **Usage**: 
      ```bash
-     Rscript 1_run_simulations.R
+     Rscript 2_run_simulations.R
      ```
-   - This script runs simulations for each parameter set defined in `parameters.csv`, with 250 replications per set. Results are saved to CSV files in the `/outputs/` directory.
+   - This script runs simulations for each parameter set defined in `parameters-species.csv` and `parameters-monitoring.csv`, with 250 replications per set. Results are saved to CSV files in the `/outputs/` directory.
 
-2. **`2_plots.R`**
-   - **Purpose**: Creates visualizations of the simulation results
+3. **`3_plots-main.R`**
+   - **Purpose**: Creates the main visualizations of the simulation results
    - **Usage**:
      ```bash
-     Rscript 2_plots.R
+     Rscript 3_plots-main.R
      ```
-   - Generates various plots showing bias in catch rate estimation across different monitoring strategies and saves them to the `/plots/` directory.
+   - Generates the primary plots showing bias in catch rate estimation across different monitoring strategies and saves them to the `/plots/` directory.
 
-3. **`simulation_functions.R`**
+4. **`3_plots-20vs30percent.R`**
+   - **Purpose**: Creates comparative visualizations between 20% and 30% monitoring coverage
+   - **Usage**:
+     ```bash
+     Rscript 3_plots-20vs30percent.R
+     ```
+   - Generates plots comparing the performance of different monitoring strategies at 20% vs 30% coverage levels.
+
+5. **`3_plots-30_sub-sampled.R`**
+   - **Purpose**: Creates visualizations comparing full monitoring vs sub-sampled monitoring within vessels/trips
+   - **Usage**:
+     ```bash
+     Rscript 3_plots-30_sub-sampled.R
+     ```
+   - Compares scenarios with all sets monitored on 30% of vessels/trips vs 50% of sets monitored on 60% of vessels/trips.
+
+6. **`simulation_functions.R`**
    - **Purpose**: Core functions for the simulation model
    - **Usage**: Not run directly; imported by other scripts
    - Contains functions for three modules:
@@ -178,7 +212,7 @@ Note we also drafted a report, however this draft was finalized on another platf
      - Monitoring module - Implements different monitoring strategies
      - Catch statistic estimation - Calculates estimated vs true catch rates
 
-4. **`quick_run_test.R`**
+7. **`quick_run_test.R`**
    - **Purpose**: Quick test script for running a small simulation
    - **Usage**:
      ```bash
@@ -186,7 +220,7 @@ Note we also drafted a report, however this draft was finalized on another platf
      ```
    - Runs a small simulation with just 5 replications using the first parameter set for testing purposes.
 
-5. **`test_single_run.R`**
+8. **`test_single_run.R`**
    - **Purpose**: Script to verify the monitoring functions work correctly
    - **Usage**:
      ```bash
@@ -194,15 +228,15 @@ Note we also drafted a report, however this draft was finalized on another platf
      ```
    - Tests the functionality of a single simulation run using a specific parameter set.
 
-6. **`conceptual_figure.R`**
-   - **Purpose**: Generates conceptual figures illustrating different monitoring strategies
+9. **`conceptual-figure-nesting.R`**
+   - **Purpose**: Generates conceptual figures showing the nested structure of monitoring strategies
    - **Usage**:
      ```bash
-     Rscript conceptual_figure.R
+     Rscript conceptual-figure-nesting.R
      ```
-   - Creates visualizations that explain the conceptual framework of monitoring strategies.
+   - Creates visualizations that illustrate the hierarchical nesting of sets within trips within vessels.
 
-7. **`render-ms.R`**
+10. **`render-ms.R`**
    - **Purpose**: Renders the R Markdown report into a Word document
    - **Usage**:
      ```bash
@@ -212,28 +246,45 @@ Note we also drafted a report, however this draft was finalized on another platf
 
 #### Configuration and Data Files
 
-1. **`parameters.csv`**
-   - Contains parameter sets for different simulation scenarios
-   - Each row represents a different parameter set with values for fleet size, trip frequency, catch rates, etc.
+1. **`parameters-species.csv`**
+   - Contains species-specific parameter sets for different simulation scenarios
+   - Each row represents a different species parameter set with values for fleet size, trip frequency, catch rates, etc.
+
+2. **`parameters-monitoring.csv`**
+   - Contains monitoring strategy parameter sets
+   - Each row represents a different monitoring scenario with values for coverage rates, bias factors, and set selection proportions
+
+3. **`parameters.csv`** (legacy file)
+   - Contains combined parameter sets from earlier versions of the simulation
 
 #### How to Run the Complete Workflow
 
 For a complete analysis workflow, run the scripts in the following order:
 
-1. First, run the simulations:
+1. First, generate conceptual figures:
    ```bash
-   Rscript 1_run_simulations.R
+   Rscript 1_conceptual_figure.R
    ```
 
-2. Next, generate the plots:
+2. Run the simulations:
    ```bash
-   Rscript 2_plots.R
+   Rscript 2_run_simulations.R
    ```
 
-3. Finally, render the report:
+3. Generate the main plots:
    ```bash
-   Rscript render-ms.R
+   Rscript 3_plots-main.R
    ```
+
+4. Optionally, generate comparative plots:
+   ```bash
+   Rscript 3_plots-20vs30percent.R
+   Rscript 3_plots-30_sub-sampled.R
+   ```
+
+5. Finally, render the report:
+   `reportv2.qmd`
+   
 
 #### Output Files
 

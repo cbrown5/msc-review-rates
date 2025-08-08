@@ -125,3 +125,4 @@ ggsave("plots/plot_bias_percent_market_comparison.png", plot = plot_market,
        width = 8, height = 9, dpi = 300)
 ggsave("plots/plot_bias_percent_market_comparison.pdf", plot = plot_market,
        width = 8, height = 9)
+

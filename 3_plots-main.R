@@ -75,7 +75,9 @@ results_plot <- results_summary %>%
     TRUE ~ description
   ))
 
-yaxis_scale <- c(-100, 170)
+max(results_plot$upper_ci_mean_bias_percent, na.rm = TRUE)
+min(results_plot$lower_ci_mean_bias_percent, na.rm = TRUE)
+yaxis_scale <- c(-95, 95)
 
 # Create data for each plot
 
@@ -98,7 +100,7 @@ plot_sets <- ggplot(results_sets, aes(x = species, y = mean_bias_percent, color 
     x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
   ) +
   scale_color_canva() +
-  scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 60, 20)) +
+  scale_y_continuous(limits = yaxis_scale, breaks = seq(yaxis_scale[1], yaxis_scale[2], 20)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
     axis.text.y = element_text(size = 14),
@@ -180,7 +182,7 @@ plot_trips <- ggplot(results_trips) +
     x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
   ) +
   scale_color_canva() +
-  scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 60, 20)) +
+  scale_y_continuous(limits = yaxis_scale, breaks = seq(yaxis_scale[1], yaxis_scale[2], 20)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
     axis.text.y = element_text(size = 14),
@@ -250,7 +252,7 @@ plot_vessels <- ggplot(results_vessels) +
     x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
   ) +
   scale_color_canva() +
-  scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 60, 20)) +
+  scale_y_continuous(limits = yaxis_scale, breaks = seq(yaxis_scale[1], yaxis_scale[2], 20)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
     axis.text.y = element_text(size = 14),
@@ -394,3 +396,31 @@ catch_wide <- results_summary %>%
     names_sep = "_"
   )
 catch_wide
+
+# wide table of total catch estimated
+catch_estimated_wide <- results_summary %>%
+  select(species, strategy, description, mean_estimated_catch) %>%
+  pivot_wider(
+    names_from = c(strategy, description),        
+    values_from = mean_estimated_catch,
+    names_sep = "_"
+  )
+catch_estimated_wide
+  
+# Extract catch numbers for sentence completion
+# Assuming we want to use the "sets" strategy with "Random sets" scenario as example
+
+# For example, if an average of XXXX rare turtles were caught as bycatch and XXXX tuna were caught by the fleet in a given year, this monitoring scenario would have estimated between XXX-XXX turtles and XXX-XXXX tuna. 
+unique(catch_missed_table$species)
+this_species <- "Rare bycatch species"
+this_species <- "Market species"
+
+unique(catch_missed_table$strategy)
+this_strategy <- "vessels"
+
+ispp <- with(catch_missed_table, species == this_species & strategy == this_strategy)
+catch_missed_table$mean_catch_real[ispp]
+catch_missed_table$lower_ci_catch_estimated[ispp]
+catch_missed_table$upper_ci_catch_estimated[ispp]
+
+
