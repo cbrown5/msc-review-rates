@@ -19,7 +19,7 @@ mutate(parameter_set_id = row_number())
 
 # params_df <- params_df[1:3,]
 #Number of replications
-n_replications <- 100
+n_replications <- 1000
 
 # Initialize results storage
 all_results <- list()
@@ -62,21 +62,21 @@ run_simulation_for_param <- function(params) {
 }
 
 
-# system.time(
-# simulation_results <- parallel::mclapply(1:nrow(params_df), function(x) {
-#   params <- params_df[x, ]
-#   cat("Running parameter set", params$parameter_set_id, "of", nrow(params_df), "\n")
-#   run_simulation_for_param(params)
-# }, 
-# mc.cores = 8, mc.set.seed = FALSE)
-# )
-
-# # # Version if parallel::mclapply is not available
-simulation_results <- lapply(1:nrow(params_df), function(x) {
+system.time(
+simulation_results <- parallel::mclapply(1:nrow(params_df), function(x) {
   params <- params_df[x, ]
   cat("Running parameter set", params$parameter_set_id, "of", nrow(params_df), "\n")
   run_simulation_for_param(params)
-})
+}, 
+mc.cores = 8, mc.set.seed = FALSE)
+)
+
+# # # # Version if parallel::mclapply is not available
+# simulation_results <- lapply(1:nrow(params_df), function(x) {
+#   params <- params_df[x, ]
+#   cat("Running parameter set", params$parameter_set_id, "of", nrow(params_df), "\n")
+#   run_simulation_for_param(params)
+# })
 
 
 all_results <- purrr::map(simulation_results, "all_param_results")

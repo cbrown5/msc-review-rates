@@ -68,7 +68,7 @@ simulate_fleet_catches <- function(params, rep = 1) {
   for (v in 1:V) {
     for (t in 1:T_vec[v]) {
       # Calculate expected catch rate for this trip
-      browser()
+      
       mu_vt <- exp(beta_0 + x_vec[v] + z_list[[v]][t])
       
       # Simulate catches using negative binomial distribution with MASS::rnegbin
@@ -120,110 +120,7 @@ simulate_fleet_catches <- function(params, rep = 1) {
   ))
 }
 
-#' Generate fleet structure (vessels, trips, sets)
-#' @param params List of parameters
-#' @return List containing fleet structure information
-#' @deprecated Use simulate_fleet_catches instead
-generate_fleet_structure <- function(params) {
-  # Extract parameters
-  V <- params$V  # Number of vessels
-  mu_trips <- params$mu_trips  # Expected number of trips per vessel
-  mu_sets <- params$mu_sets  # Expected number of sets per trip
-  theta_trips <- params$theta_trips  # Dispersion parameter for number of trips
-  theta_sets <- params$theta_sets  # Dispersion parameter for number of sets
-  
-  # Generate number of trips for each vessel using negative binomial
-  T <- MASS::rnegbin(V, mu_trips, theta_trips)
-  
-  # Initialize list to store number of sets for each trip of each vessel
-  S <- list()
-  
-  # Generate number of sets for each trip using negative binomial
-  for (v in 1:V) {
-    S[[v]] <- MASS::rnegbin(T[v], mu_sets, theta_sets)
-  }
-  
-  # Return structured data
-  return(list(
-    V = V,  # Number of vessels
-    T = T,  # Number of trips per vessel
-    S = S   # Number of sets per trip
-  ))
-}
 
-#' Generate random effects for vessels and trips
-#' @param params List of parameters
-#' @param fleet_structure Fleet structure from generate_fleet_structure()
-#' @return List containing random effects
-#' @deprecated Use simulate_fleet_catches instead
-generate_random_effects <- function(params, fleet_structure) {
-  # Extract parameters
-  V <- fleet_structure$V  # Number of vessels
-  T <- fleet_structure$T  # Number of trips per vessel
-  sigma_x <- params$sigma_x  # SD for vessel-level random effects
-  sigma_z <- params$sigma_z  # SD for trip-level random effects
-  
-  # Generate vessel-level random effects
-  x <- rnorm(V, 0, sigma_x)
-  
-  # Initialize list to store trip-level random effects
-  z <- list()
-  
-  # Generate trip-level random effects
-  for (v in 1:V) {
-    z[[v]] <- rnorm(T[v], 0, sigma_z)
-  }
-  
-  # Return structured data
-  return(list(
-    x = x,  # Vessel-level random effects
-    z = z   # Trip-level random effects
-  ))
-}
-
-#' Simulate catches for each set
-#' @param params List of parameters
-#' @param fleet_structure Fleet structure
-#' @param random_effects Random effects
-#' @return List containing catches and expected catch rates
-#' @deprecated Use simulate_fleet_catches instead
-simulate_catches <- function(params, fleet_structure, random_effects) {
-  # Extract parameters
-  V <- fleet_structure$V  # Number of vessels
-  T <- fleet_structure$T  # Number of trips per vessel
-  S <- fleet_structure$S  # Number of sets per trip
-  beta_0 <- params$beta_0  # Baseline expected catch rate
-  theta <- params$theta  # Dispersion parameter for negative binomial
-  
-  # Extract random effects
-  x <- random_effects$x  # Vessel-level random effects
-  z <- random_effects$z  # Trip-level random effects
-  
-  # Initialize lists to store catches and expected catch rates
-  y <- list()
-  mu <- list()
-  
-  # Calculate expected catch rates and simulate catches
-  for (v in 1:V) {
-    y[[v]] <- list()
-    mu[[v]] <- list()
-    
-    for (t in 1:T[v]) {
-      # Calculate expected catch rate for this trip
-      mu_vt <- exp(beta_0 + x[v] + z[[v]][t])
-      mu[[v]][[t]] <- rep(mu_vt, S[[v]][t])
-      browser()
-      # Simulate catches using negative binomial distribution with MASS::rnegbin
-      y[[v]][[t]] <- MASS::rnegbin(S[[v]][t], mu_vt, theta)
-    }
-  }
-  
-  # Return structured data
-  return(list(
-    y = y,    # Catches
-    mu = mu   # Expected catch rates
-  ))
-}
 
 # --- TIDY MONITORING FUNCTIONS ---
 

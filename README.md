@@ -141,6 +141,8 @@ bias_percent = bias / true_catch_rate * 100
 
 ## Directory Structure and Script Usage
 
+Note we also drafted a report, however this draft was finalized on another platform. 
+
 ### Main Directories
 
 - `/` - Root directory containing main R scripts and configuration files

@@ -75,7 +75,7 @@ results_plot <- results_summary %>%
     TRUE ~ description
   ))
 
-yaxis_scale <- c(-90, 70)
+yaxis_scale <- c(-100, 170)
 
 # Create data for each plot
 
@@ -156,13 +156,15 @@ results_trips <- results_plot %>%
   filter(strategy %in% c("sets", "trips"))%>%
   mutate(
     colour_scale = str_to_title(paste(strategy, description, sep = " - ")),
-    colour_scale = case_when(colour_scale == "Sets - Random Sets" ~ "Random Sets",
-       colour_scale == "Trips - Random Sets" ~ "Randomly selected \n trips",
-       colour_scale == "Trips - Trip Bias" ~ "Bias to low \n catch rate trips",
+    colour_scale = case_when(colour_scale == "Sets - Random Sets" ~ "Scnr 1: Random Sets",
+       colour_scale == "Trips - Random Sets" ~ "Scnr 2: Randomly selected \n trips",
+       colour_scale == "Trips - Trip Bias" ~ "Scnr 2: Bias to low \n catch rate trips",
        TRUE ~ colour_scale)
   ) %>%
   arrange(species, description) 
-    
+
+results_trips$mean_true_catch
+
 pd2 <- position_dodge(width = 0.5)
 
 plot_trips <- ggplot(results_trips) + 
@@ -218,21 +220,6 @@ plot_trips_monitored <- ggplot(results_trips) +
     panel.grid.minor = element_blank()
   )
 
-#
-# Trips plot - missed catch
-#
-plot_trips_missed <- ggplot(results_trips) + 
-  aes(x = species, y = mean_catch_missed, color = colour_scale,
-  group = colour_scale) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
-  geom_point(size = 3.5, position = pd2) +
-  scale_y_log10() + 
-  geom_errorbar(aes(ymin = lower_ci_catch_missed, ymax = upper_ci_catch_missed),
-    position = pd2, width = 0.25) +
-    theme_grey()
-plot_trips_missed
-
-
 
 #
 # Vessels plot - vessels and sets strategies
@@ -241,7 +228,11 @@ plot_trips_missed
 results_vessels <- results_plot %>%
   filter(strategy %in% c("sets", "vessels")) %>%
   mutate(
-    colour_scale = str_to_title(paste(strategy, description, sep = " - "))
+    colour_scale = str_to_title(paste(strategy, description, sep = " - ")),
+     colour_scale = case_when(colour_scale == "Sets - Random Sets" ~ "Scnr 1: Random Sets",
+       colour_scale == "Vessels - Random Sets" ~ "Scnr 3: Randomly selected \n vessels",
+       colour_scale == "Vessels - Vessel Bias" ~ "Scnr 3: Bias to low \n catch rate vessels",
+       TRUE ~ colour_scale)
   ) %>%
   arrange(species, description)
 
@@ -393,3 +384,13 @@ catch_missed_wide <- catch_missed_table %>%
 
 write.csv(catch_missed_wide, "outputs/catch_missed_wide_table.csv", row.names = FALSE)
 
+#Wide table of total catch true
+
+catch_wide <- results_summary %>%
+  select(species, strategy, description, mean_true_catch) %>%
+  pivot_wider(
+    names_from = c(strategy, description),
+    values_from = mean_true_catch,
+    names_sep = "_"
+  )
+catch_wide
