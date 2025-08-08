@@ -68,6 +68,7 @@ simulate_fleet_catches <- function(params, rep = 1) {
   for (v in 1:V) {
     for (t in 1:T_vec[v]) {
       # Calculate expected catch rate for this trip
+      browser()
       mu_vt <- exp(beta_0 + x_vec[v] + z_list[[v]][t])
       
       # Simulate catches using negative binomial distribution with MASS::rnegbin
@@ -211,7 +212,7 @@ simulate_catches <- function(params, fleet_structure, random_effects) {
       # Calculate expected catch rate for this trip
       mu_vt <- exp(beta_0 + x[v] + z[[v]][t])
       mu[[v]][[t]] <- rep(mu_vt, S[[v]][t])
-      
+      browser()
       # Simulate catches using negative binomial distribution with MASS::rnegbin
       y[[v]][[t]] <- MASS::rnegbin(S[[v]][t], mu_vt, theta)
     }
