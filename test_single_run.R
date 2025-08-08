@@ -7,10 +7,21 @@ library(tidyverse)
 source("simulation_functions.R")
 
 # Read parameter sets
-params_df <- read.csv("parameters.csv")
+monitoring_params_df <- read.csv("parameters-monitoring.csv")
+spp_params_df <- read.csv("parameters-species.csv")
 
-# Test with the first parameter set (Baseline)
-params <- as.list(params_df[5, ])
+params_df <- merge(monitoring_params_df, spp_params_df, by = NULL) %>%
+  mutate(parameter_set_id = row_number()) 
+
+# Test with the first parameter set (Baseline + Market species)
+params <- as.list(params_df[1, ])
+
+cat("Testing parameter set:", params$parameter_set_id, "\n")
+cat("Description:", params$description, "\n") 
+cat("Species:", params$species, "\n")
+cat("Monitoring rate:", params$p_monitor, "\n")
+cat("Vessel bias:", params$bias_v, "\n")
+cat("Trip bias:", params$bias_factor, "\n\n")
 
 
 # Generate simulation data
