@@ -11,7 +11,7 @@ library(tidyverse)
 source("simulation_functions.R")
 
 # Read parameter sets
-monitoring_params_df <- read.csv("parameters-monitoring.csv")
+monitoring_params_df <- read.csv("parameters-monitoring-scenarios.csv")
 spp_params_df <- read.csv("parameters-species.csv")
 
 params_df <- merge(monitoring_params_df, spp_params_df, by = NULL) %>%
@@ -88,6 +88,6 @@ summary_results_df <- do.call(rbind, summary_results) %>%
   left_join(params_df, by = c("description", "parameter_set_id"))
 
 # Save results (with tidy suffix to distinguish from original implementation)
-write.csv(all_results_df, "outputs/simulation_results_full_tidy.csv", row.names = FALSE)
-write.csv(summary_results_df, "outputs/simulation_results_summary_tidy.csv", row.names = FALSE)
+write.csv(all_results_df, "outputs/simulation_results_full_tidy-21Aug.csv", row.names = FALSE)
+write.csv(summary_results_df, "outputs/simulation_results_summary_tidy-21Aug.csv", row.names = FALSE)
 

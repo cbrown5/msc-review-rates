@@ -17,6 +17,8 @@ Different monitoring systems have different capabilities:
 The model is split into two modules, a catch event model and a monitoring module. 
 Used FSM as this had the most reliable data in logbooks. 
 
+All code created in the R programming language. Code written by Chris Brown with assistance of Github Copilot for menial coding tasks. All code checked and its accuracy confirmed by Dr Brown. 
+
 #### Parameter calculations 
 
 Parameters were calculated from a longline tuna fleet. Note that below I assume sets per trip are negative binomially distributed. However data indicated an unusual peaked distribution with high dispersion. 
@@ -133,9 +135,9 @@ M_trips[v,t,s] ~ dbern(inverse_logit(phi_trips[v,t,s]))
 - Random across trips within vessels: Selected trips have a proportion (p_sets_select) of their sets monitored
 
 **p_sets_select Parameter:**
-- When p_sets_select = 1: All sets within selected vessels/trips are monitored (traditional approach)
+- When p_sets_select = 1: All sets within selected vessels/trips are monitored 
 - When p_sets_select < 1: Only a random subset of sets within selected vessels/trips are monitored
-- This parameter allows modeling partial monitoring within selected units, which may be more realistic for electronic monitoring systems
+- This parameter allows modeling partial data review within monitored units, which may be more realistic for electronic monitoring systems
 
 ### Catch statistic estimation
 

@@ -10,7 +10,7 @@ library(patchwork)
 theme_set(theme_classic())
 
 # Read simulation results
-monitoring_params_df <- read.csv("parameters-monitoring.csv")
+monitoring_params_df <- read.csv("parameters-monitoring-scenarios.csv")
 spp_params_df <- read.csv("parameters-species.csv")
 
 params_df <- merge(monitoring_params_df, spp_params_df, by = NULL) %>%
@@ -19,7 +19,7 @@ mutate(parameter_set_id = row_number())
 # Read simulation results and filter to compare specific monitoring scenarios
 # monitoring_param_set 1-3: 30% vessels/trips with 100% sets
 # monitoring_param_set 7-9: 60% vessels/trips with 50% sets  
-results_summary <- read.csv("outputs/simulation_results_full_tidy.csv")  %>%
+results_summary <- read.csv("outputs/simulation_results_full_tidy-21Aug.csv")  %>%
   mutate(catch_real = true_catch_rate * total_sets,
          catch_estimated = estimated_catch_rate * total_sets,
          # Calculate catch missed
@@ -48,18 +48,20 @@ results_summary <- read.csv("outputs/simulation_results_full_tidy.csv")  %>%
       upper_ci_mean_bias_percent = quantile(bias_percent, 0.975, na.rm = TRUE),
       .groups = "drop"
     ) %>%
-  left_join(params_df, by = c("description", "parameter_set_id")) %>%
-  filter(p_monitor == 0.3)
+  left_join(params_df, by = c("description", "parameter_set_id")) 
 
+#strategy is the units that monitoring is allocated by (scenario)
+#description is the parameter set from parameters-monitoring-scenarios.csv
+# We want to have: 
+# "Baseline" (100% coverage, 20% monitoring) with "sets"
+# "Baseline 20%" and with vessels 
+# "Vessel bias 20%" with "vessels"
+# "Baseline 75%" with "trips"
+# "Trip bias 75%" with "trips"
 
 scnrs_to_plot <- data.frame(
-  strategy = c("sets", "trips", "vessels", "trips", "vessels"), 
-  description = c(
-      rep("Baseline", 3),
-      "Trip bias", 
-      "Vessel bias"
-)
-)
+  strategy = c("sets", "vessels", "vessels", "trips", "trips"), 
+  description = c("Baseline", "Baseline 20%", "Vessel bias 20%", "Baseline 75%", "Trip bias 75%"))
 
 spp_scnrs_to_plot <- merge(scnrs_to_plot, data.frame(species = unique(results_summary$species)),
       by = NULL) %>%
@@ -77,7 +79,7 @@ results_plot <- results_summary %>%
 
 max(results_plot$upper_ci_mean_bias_percent, na.rm = TRUE)
 min(results_plot$lower_ci_mean_bias_percent, na.rm = TRUE)
-yaxis_scale <- c(-95, 95)
+yaxis_scale <- c(-100, 125)
 
 # Create data for each plot
 
@@ -85,6 +87,7 @@ yaxis_scale <- c(-95, 95)
 # Sets plot - only sets strategy
 #
 results_sets <- results_plot %>%
+  # Just plot the baseline (ie monitoring_param_set 1 from parameters-monitoring-scenarios.csv) with random sets allocation
   filter(strategy == "sets") %>%
   mutate(x_axis = paste(species, description, sep = " - ")) %>%
     arrange(species, description) 
@@ -159,8 +162,8 @@ results_trips <- results_plot %>%
   mutate(
     colour_scale = str_to_title(paste(strategy, description, sep = " - ")),
     colour_scale = case_when(colour_scale == "Sets - Random Sets" ~ "Scnr 1: Random Sets",
-       colour_scale == "Trips - Random Sets" ~ "Scnr 2: Randomly selected \n trips",
-       colour_scale == "Trips - Trip Bias" ~ "Scnr 2: Bias to low \n catch rate trips",
+       colour_scale == "Trips - Baseline 75%" ~ "Scnr 2: Randomly \n selected trips",
+       colour_scale == "Trips - Trip Bias 75%" ~ "Scnr 2: Bias to low \n catch rate trips",
        TRUE ~ colour_scale)
   ) %>%
   arrange(species, description) 
@@ -232,11 +235,23 @@ results_vessels <- results_plot %>%
   mutate(
     colour_scale = str_to_title(paste(strategy, description, sep = " - ")),
      colour_scale = case_when(colour_scale == "Sets - Random Sets" ~ "Scnr 1: Random Sets",
-       colour_scale == "Vessels - Random Sets" ~ "Scnr 3: Randomly selected \n vessels",
-       colour_scale == "Vessels - Vessel Bias" ~ "Scnr 3: Bias to low \n catch rate vessels",
+       colour_scale == "Vessels - Baseline 20%" ~ "Scnr 3: Randomly \n selected vessels",
+       colour_scale == "Vessels - Vessel Bias 20%" ~ "Scnr 3: Bias to low \n catch rate vessels",
        TRUE ~ colour_scale)
   ) %>%
-  arrange(species, description)
+   arrange(species, description) %>%
+  mutate(
+    colour_scale = factor(
+      colour_scale,
+      levels = c(
+        "Scnr 1: Random Sets",
+        "Scnr 3: Bias to low \n catch rate vessels",
+        "Scnr 3: Randomly \n selected vessels"
+      )
+    )
+  )
+
+table(results_vessels$colour_scale)
 
 pd3 <- position_dodge(width = 0.5)
 plot_vessels <- ggplot(results_vessels) + 
@@ -416,11 +431,12 @@ this_species <- "Rare bycatch species"
 this_species <- "Market species"
 
 unique(catch_missed_table$strategy)
-this_strategy <- "vessels"
+this_strategy <- "trips"
 
 ispp <- with(catch_missed_table, species == this_species & strategy == this_strategy)
 catch_missed_table$mean_catch_real[ispp]
 catch_missed_table$lower_ci_catch_estimated[ispp]
 catch_missed_table$upper_ci_catch_estimated[ispp]
+
 
 
