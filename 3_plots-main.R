@@ -162,8 +162,8 @@ results_trips <- results_plot %>%
   mutate(
     colour_scale = str_to_title(paste(strategy, description, sep = " - ")),
     colour_scale = case_when(colour_scale == "Sets - Random Sets" ~ "Scnr 1: Random Sets",
-       colour_scale == "Trips - Baseline 75%" ~ "Scnr 2: Randomly \n selected trips",
-       colour_scale == "Trips - Trip Bias 75%" ~ "Scnr 2: Bias to low \n catch rate trips",
+       colour_scale == "Trips - Baseline 75%" ~ "Scnr 3: Randomly \n selected trips",
+       colour_scale == "Trips - Trip Bias 75%" ~ "Scnr 3: Bias to low \n catch rate trips",
        TRUE ~ colour_scale)
   ) %>%
   arrange(species, description) 
@@ -235,8 +235,8 @@ results_vessels <- results_plot %>%
   mutate(
     colour_scale = str_to_title(paste(strategy, description, sep = " - ")),
      colour_scale = case_when(colour_scale == "Sets - Random Sets" ~ "Scnr 1: Random Sets",
-       colour_scale == "Vessels - Baseline 20%" ~ "Scnr 3: Randomly \n selected vessels",
-       colour_scale == "Vessels - Vessel Bias 20%" ~ "Scnr 3: Bias to low \n catch rate vessels",
+       colour_scale == "Vessels - Baseline 20%" ~ "Scnr 2: Randomly \n selected vessels",
+       colour_scale == "Vessels - Vessel Bias 20%" ~ "Scnr 2: Bias to low \n catch rate vessels",
        TRUE ~ colour_scale)
   ) %>%
    arrange(species, description) %>%
@@ -245,8 +245,8 @@ results_vessels <- results_plot %>%
       colour_scale,
       levels = c(
         "Scnr 1: Random Sets",
-        "Scnr 3: Bias to low \n catch rate vessels",
-        "Scnr 3: Randomly \n selected vessels"
+        "Scnr 2: Bias to low \n catch rate vessels",
+        "Scnr 2: Randomly \n selected vessels"
       )
     )
   )

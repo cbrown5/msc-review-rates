@@ -256,7 +256,10 @@ Note we also drafted a report, however this draft was finalized on another platf
    - Contains monitoring strategy parameter sets
    - Each row represents a different monitoring scenario with values for coverage rates, bias factors, and set selection proportions
 
-3. **`parameters.csv`** (legacy file)
+3. **`parameters-monitoring-scenarios.csv`**
+   - As above, but new scenarios used to simulate unequal sample sizes while maintaining realistic review and coverage rates for EM and human monitoring systems. 
+
+4. **`parameters.csv`** (legacy file)
    - Contains combined parameter sets from earlier versions of the simulation
 
 #### How to Run the Complete Workflow
