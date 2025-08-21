@@ -18,7 +18,7 @@ Ben Gilmer, Director of Large-Scale Fisheries, The Nature Conservancy
 
 ## Transparency statement
 
-Simulation code are available at 
+Simulation code are available at https://github.com/cbrown5/msc-review-rates
 
 ## Advanced methods
 
