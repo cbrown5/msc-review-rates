@@ -1,6 +1,5 @@
 ---
 title: "Policies for fishery monitoring must specify the level of coverage and how monitoring is allocated to vessels and trips"
-date: "`r Sys.Date()`"
 description: |
   Analysis of catch rate estimation with biased sampling strategies
 bibliography: references.bib
@@ -111,19 +110,22 @@ All parameters were chosen to be representative of the Western Pacific longline 
 | μ^sets^ | 26 | Mean number of sets per trip, typical for longline tuna fishing |
 | θ^sets^ | 1.8 | Dispersion parameter for sets per trip, reflects operational variation |
 | θ^catch^ | 0.42 | Catch dispersion parameter, controls overdispersion in catch counts |
-| $p_{cover}$ | 0.3/0.2 | Proportion of sets covered by monitoring (e.g. 20%, 30%), as specified by MSC requirements |
+| $p_{cover}$ | 0.2/0.3 | Proportion of sets covered by monitoring (e.g. 20%, 30%), as specified by MSC requirements |
 | $p_{review}$ | 0.2/1.0 | Proportion of sets that are reviewed for data within those that are monitored. |
 
 **Table S4** Parameters for monitoring scenarios.
 
-| Monitoring Set | Description | Coverage rate (p_monitor) | Vessel Bias (bias_v) | Trip Bias (bias_factor) |
-|---------------|---------------|---------------|---------------|---------------|
-| 1 | Baseline | 0.3 (30%) | 0 | 0 |
-| 2 | Vessel bias | 0.3 (30%) | -2 | 0 |
-| 3 | Trip bias | 0.3 (30%) | 0 | -2 |
-| 4 | Baseline 20% | 0.2 (20%) | 0 | 0 |
-| 5 | Vessel bias 20% | 0.2 (20%) | -2 | 0 |
-| 6 | Trip bias 20% | 0.2 (20%) | 0 | -2 |
+| Monitoring Set | Description | Coverage rate (p_monitor) | Vessel Bias (bias_v) | Trip Bias (bias_factor) | Sets Selection Rate (p_sets_select) |
+|---------------|---------------|---------------|---------------|---------------|---------------|
+| 1 | Baseline | 1.0 (100%) | 0 | 0 | 0.2 (20%) |
+| 2 | Vessel bias | 1.0 (100%) | -2 | 0 | 0.2 (20%) |
+| 3 | Trip bias | 1.0 (100%) | 0 | -2 | 0.2 (20%) |
+| 4 | Baseline 20% | 0.2 (20%) | 0 | 0 | 0.2 (20%) |
+| 5 | Vessel bias 20% | 0.2 (20%) | -2 | 0 | 0.2 (20%) |
+| 6 | Trip bias 20% | 0.2 (20%) | 0 | -2 | 0.2 (20%) |
+| 7 | Baseline 75% | 0.2 (20%) | 0 | 0 | 0.75 (75%) |
+| 8 | Vessel bias 75% | 0.2 (20%) | -2 | 0 | 0.75 (75%) |
+| 9 | Trip bias 75% | 0.2 (20%) | 0 | -2 | 0.75 (75%) |
 
 **Table S5** Species-specific parameter values for catch simulations.
 
