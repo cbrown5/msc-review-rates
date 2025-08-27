@@ -9,6 +9,8 @@ library(ggthemes)
 library(patchwork)
 theme_set(theme_classic())
 
+add_CIs <- TRUE
+
 # Read simulation results
 monitoring_params_df <- read.csv("parameters-monitoring-scenarios.csv")
 spp_params_df <- read.csv("parameters-species.csv")
@@ -93,28 +95,39 @@ results_sets <- results_plot %>%
     arrange(species, description) 
 
 plot_sets <- ggplot(results_sets, aes(x = species, y = mean_bias_percent, color = description)) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
-  geom_point(size = 3.5, position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(ymin = lower_ci_mean_bias_percent, ymax = upper_ci_mean_bias_percent),
-    position = position_dodge(width = 0.5), width = 0.25
-  ) +
-  labs(
-    title = "Sets Scenario: Percent Bias in Catch Rate Estimation",
-    x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
-  ) +
-  scale_color_canva() +
-  scale_y_continuous(limits = yaxis_scale, breaks = seq(yaxis_scale[1], yaxis_scale[2], 20)) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 13, face = "bold"),
-    title = element_text(size = 14, face = "bold"),
-    legend.title = element_text(size = 12, face = "bold"),
-    legend.text = element_text(size = 14),
-    legend.position = "none",
-    plot.margin = margin(10, 10, 10, 15),
-    panel.grid.minor = element_blank()
-  )
+      geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+      geom_point(size = 3.5, position = position_dodge(width = 0.5)) +
+      geom_errorbar(aes(ymin = lower_ci_mean_bias_percent, ymax = upper_ci_mean_bias_percent),
+        position = position_dodge(width = 0.5), width = 0.25
+      ) +
+      {if(add_CIs) geom_text(
+        aes(
+          label = sprintf("[%.1f to %.1f]", 
+          lower_ci_mean_bias_percent, upper_ci_mean_bias_percent),
+          y = upper_ci_mean_bias_percent + 5
+        ),
+        position = position_dodge(width = 0.5),
+        size = 3.5,
+        vjust = 0,
+        show.legend = FALSE
+      )} +
+      labs(
+        title = "EM Scenario 1: 100% coverage with 20% random sets",
+        x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
+      ) +
+      scale_color_canva() +
+      scale_y_continuous(limits = yaxis_scale, breaks = seq(yaxis_scale[1], yaxis_scale[2], 20)) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
+        axis.text.y = element_text(size = 14),
+        axis.title = element_text(size = 13, face = "bold"),
+        title = element_text(size = 14, face = "bold"),
+        legend.title = element_text(size = 12, face = "bold"),
+        legend.text = element_text(size = 14),
+        legend.position = "none",
+        plot.margin = margin(10, 10, 10, 15),
+        panel.grid.minor = element_blank()
+      )
 plot_sets
 
 
@@ -166,11 +179,24 @@ results_trips <- results_plot %>%
        colour_scale == "Trips - Trip Bias 75%" ~ "Scnr 3: Bias to low \n catch rate trips",
        TRUE ~ colour_scale)
   ) %>%
-  arrange(species, description) 
+  arrange(species, description)  %>%
+  mutate(
+    colour_scale = factor(
+      colour_scale,
+      levels = c(
+        "Scnr 1: Random Sets",
+        "Scnr 3: Randomly \n selected trips",
+        "Scnr 3: Bias to low \n catch rate trips"
+        
+      )
+    )
+  )
 
 results_trips$mean_true_catch
 
 pd2 <- position_dodge(width = 0.5)
+
+mypal <- canva_pal("Fresh and bright")(3)[c(1,3,2)]
 
 plot_trips <- ggplot(results_trips) + 
   aes(x = species, y = mean_bias_percent, color = colour_scale,
@@ -179,12 +205,22 @@ plot_trips <- ggplot(results_trips) +
   geom_point(size = 3.5, position = pd2) +
   geom_errorbar(aes(ymin = lower_ci_mean_bias_percent, ymax = upper_ci_mean_bias_percent),
     position = pd2, width = 0.25) +
+     {if(add_CIs) geom_text(
+        aes(
+          label = sprintf("[%.1f to %.1f]", 
+          lower_ci_mean_bias_percent, upper_ci_mean_bias_percent),
+          y = upper_ci_mean_bias_percent + 5
+        ),
+        position = position_dodge(width = 0.5),
+        size = 3.5,
+        vjust = 0,
+        show.legend = FALSE
+      )} +
   labs(
-    title = "Trips Scenario: Percent Bias in Catch Rate Estimation",
-    subtitle = "With Sets Scenario as Reference",
+    title = "Human observer Scenario 3: 20% coverage with 75% review",
     x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
   ) +
-  scale_color_canva() +
+    scale_color_manual(values = mypal) +
   scale_y_continuous(limits = yaxis_scale, breaks = seq(yaxis_scale[1], yaxis_scale[2], 20)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
@@ -209,7 +245,6 @@ plot_trips_monitored <- ggplot(results_trips) +
   geom_point(size = 3.5, position = pd2) +
   labs(
     title = "Trips Scenario: Mean Monitored Sets",
-    subtitle = "With Sets Scenario as Reference",
     x = "", y = "Mean Monitored Sets", color = "Monitoring Scenario"
   ) +
   scale_color_canva() +
@@ -245,13 +280,15 @@ results_vessels <- results_plot %>%
       colour_scale,
       levels = c(
         "Scnr 1: Random Sets",
-        "Scnr 2: Bias to low \n catch rate vessels",
-        "Scnr 2: Randomly \n selected vessels"
+        "Scnr 2: Randomly \n selected vessels",
+        "Scnr 2: Bias to low \n catch rate vessels"
+        
       )
     )
   )
 
 table(results_vessels$colour_scale)
+mypal <- canva_pal("Fresh and bright")(3)[c(1,3,2)]
 
 pd3 <- position_dodge(width = 0.5)
 plot_vessels <- ggplot(results_vessels) + 
@@ -261,12 +298,22 @@ plot_vessels <- ggplot(results_vessels) +
   geom_point(size = 3.5, position = pd3) +
   geom_errorbar(aes(ymin = lower_ci_mean_bias_percent, ymax = upper_ci_mean_bias_percent),
     position = pd3, width = 0.25) +
+  {if(add_CIs) geom_text(
+        aes(
+          label = sprintf("[%.1f to %.1f]", 
+          lower_ci_mean_bias_percent, upper_ci_mean_bias_percent),
+          y = upper_ci_mean_bias_percent + 5
+        ),
+        position = position_dodge(width = 0.5),
+        size = 3.5,
+        vjust = 0,
+        show.legend = FALSE
+      )} +
   labs(
-    title = "Vessels Scenario: Percent Bias in Catch Rate Estimation",
-    subtitle = "With Sets Scenario as Reference",
+    title = "EM Scenario 2: 20% coverage of vessels with 20% review",
     x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
   ) +
-  scale_color_canva() +
+  scale_color_manual(values = mypal) +
   scale_y_continuous(limits = yaxis_scale, breaks = seq(yaxis_scale[1], yaxis_scale[2], 20)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
@@ -291,7 +338,6 @@ plot_vessels_monitored <- ggplot(results_vessels) +
   geom_point(size = 3.5, position = pd3) +
   labs(
     title = "Vessels Scenario: Mean Monitored Sets",
-    subtitle = "With Sets Scenario as Reference",
     x = "", y = "Mean Monitored Sets", color = "Monitoring Scenario"
   ) +
   scale_color_canva() +
@@ -319,7 +365,6 @@ plot_vessels_missed <- ggplot(results_vessels) +
     position = pd3, width = 0.25) +
   labs(
     title = "Vessels Scenario: Mean Catch Missed",
-    subtitle = "With Sets Scenario as Reference",
     x = "", y = "Mean Catch Missed", color = "Monitoring Scenario"
   ) +
   scale_color_canva() +
@@ -352,7 +397,7 @@ combined_plot
 # Save the plots
 ggsave("plots/plot_bias_percent_sets.png", plot = plot_sets,
        width = 8, height = 9, dpi = 300)
-ggsave("plots/plot_bias_percent_trips.png", plot = plot_trips,
+ggsave("plots/plot_bias_percent_trip.png", plot = plot_trips,
        width = 8, height = 9, dpi = 300)
 ggsave("plots/plot_bias_percent_vessels.png", plot = plot_vessels,
        width = 8, height = 9, dpi = 300)
@@ -438,5 +483,17 @@ catch_missed_table$mean_catch_real[ispp]
 catch_missed_table$lower_ci_catch_estimated[ispp]
 catch_missed_table$upper_ci_catch_estimated[ispp]
 
+#
+# Summary table of numbers in plots 
+#
 
+# Combine results_sets, results_trips, and results_vessels into one dataframe
+results_all <- bind_rows(
+  results_sets %>% mutate(plot_group = "sets"),
+  results_trips %>% mutate(plot_group = "trips"),
+  results_vessels %>% mutate(plot_group = "vessels")
+)
+
+# Save the combined dataframe as CSV
+write.csv(results_all, "outputs/results_all_summary.csv", row.names = FALSE)
 
