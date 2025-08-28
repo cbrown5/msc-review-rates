@@ -1,0 +1,7 @@
+monitoring_param_set,description,p_monitor,bias_v,bias_factor,p_sets_select
+10,Baseline 30%,0.3,0,0,0.2
+11,Vessel bias 30%,0.3,-2,0,0.2
+12,Trip bias 30%,0.3,0,-2,0.2
+13,Baseline 100%,1,0,0,0.2
+14,Vessel bias 100%,1,-2,0,0.2
+15,Trip bias 100%,1,0,-2,0.2

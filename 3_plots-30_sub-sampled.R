@@ -73,7 +73,12 @@ spp_scnrs_to_plot <- merge(scnrs_to_plot, data.frame(species = unique(results_su
       arrange(strategy)
 
 results_plot <- results_summary %>%
-  inner_join(spp_scnrs_to_plot, by = c("species", "strategy", "description")) 
+  inner_join(spp_scnrs_to_plot, by = c("species", "strategy", "description")) %>%
+  mutate(species = str_replace_all(species, "bycatch", "unwanted catch"),
+           species = str_replace_all(species, "Bycatch", "Unwanted catch")
+           ) %>%
+  mutate(species = factor(species, 
+  levels = c(setdiff(unique(species), "Rare unwanted catch species"), "Rare unwanted catch species")))
 
 yaxis_scale <- c(-99, 99)
 

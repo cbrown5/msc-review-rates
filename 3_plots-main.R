@@ -9,7 +9,7 @@ library(ggthemes)
 library(patchwork)
 theme_set(theme_classic())
 
-add_CIs <- TRUE
+add_CIs <- FALSE
 
 # Read simulation results
 monitoring_params_df <- read.csv("parameters-monitoring-scenarios.csv")
@@ -52,6 +52,9 @@ results_summary <- read.csv("outputs/simulation_results_full_tidy-21Aug.csv")  %
     ) %>%
   left_join(params_df, by = c("description", "parameter_set_id")) 
 
+table(results_summary$description, results_summary$strategy)
+# write.csv(results_summary, "outputs/simulation_results_summary.csv", row.names = FALSE)
+
 #strategy is the units that monitoring is allocated by (scenario)
 #description is the parameter set from parameters-monitoring-scenarios.csv
 # We want to have: 
@@ -79,6 +82,14 @@ results_plot <- results_summary %>%
     TRUE ~ description
   ))
 
+
+
+results_plot <- results_plot %>%
+    mutate(species = str_replace_all(species, "bycatch", "unwanted catch"),
+           species = str_replace_all(species, "Bycatch", "Unwanted catch")
+           ) %>%
+  mutate(species = factor(species, levels = c(setdiff(unique(species), "Rare unwanted catch species"), "Rare unwanted catch species")))
+
 max(results_plot$upper_ci_mean_bias_percent, na.rm = TRUE)
 min(results_plot$lower_ci_mean_bias_percent, na.rm = TRUE)
 yaxis_scale <- c(-100, 125)
@@ -93,6 +104,7 @@ results_sets <- results_plot %>%
   filter(strategy == "sets") %>%
   mutate(x_axis = paste(species, description, sep = " - ")) %>%
     arrange(species, description) 
+
 
 plot_sets <- ggplot(results_sets, aes(x = species, y = mean_bias_percent, color = description)) +
       geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
