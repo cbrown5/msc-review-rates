@@ -246,6 +246,11 @@ Note we also drafted a report, however this draft was finalized on another platf
      ```
    - Compiles `report.rmd` into `msc-review-rates-report.docx`.
 
+11. **`4_run_simulations-grid.R`**
+   - **Purpose**: Main script to run the full simulation for grid of review rates (just market species)
+   - This script runs simulations for each parameter set defined in `parameters-species.csv` and `parameters-monitoring.csv`, with 1000 replications per set. Results are saved to CSV files in the `/outputs/` directory.
+   
+
 #### Configuration and Data Files
 
 1. **`parameters-species.csv`**
@@ -259,7 +264,11 @@ Note we also drafted a report, however this draft was finalized on another platf
 3. **`parameters-monitoring-scenarios.csv`**
    - As above, but new scenarios used to simulate unequal sample sizes while maintaining realistic review and coverage rates for EM and human monitoring systems. 
 
-4. **`parameters.csv`** (legacy file)
+4. **`parameters-monitoring-scenarios-extra.csv`**
+   - As above, extra scenarios used in the sample size plot.  
+
+
+5. **`parameters.csv`** (legacy file)
    - Contains combined parameter sets from earlier versions of the simulation
 
 #### How to Run the Complete Workflow

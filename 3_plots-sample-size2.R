@@ -12,7 +12,7 @@ add_CIs <- FALSE
 
 #main scenario results 
 results_summary_mean <- read.csv("outputs/simulation_results_summary.csv")
-
+col_pal2 <- c("#0D96D4","#1F4497", "#E29617")
 #
 # Load and wrangle the extra runs with 30% coverage
 #
@@ -164,7 +164,8 @@ plot_market <- ggplot(results_market, aes(x = Scenario,
   # scale_color_canva() +
   scale_y_continuous(limits = yaxis_scale, breaks = seq(-80, 80, 20)) +
   theme_classic() +
-  scale_color_brewer(palette = "Set2") +
+  # scale_color_brewer(palette = "Set2") +
+  scale_color_manual(values = col_pal2) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
     axis.text.y = element_text(size = 12),
@@ -181,3 +182,6 @@ plot_market
 
 ggsave("plots/plot_bias_percent_sample-size.png", plot = plot_market,
        width = 8, height = 9, dpi = 300)
+
+ggsave("plots/plot_bias_percent_sample-size.eps", plot = plot_market,
+       width = 8, height = 9)

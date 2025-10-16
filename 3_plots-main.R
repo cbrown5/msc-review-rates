@@ -1,6 +1,7 @@
 # MSC Review Rates Simulation - Visualization
 # This script creates visualizations of the simulation results
 
+
 # Load required libraries
 library(tidyverse)
 library(ggplot2)
@@ -10,6 +11,9 @@ library(patchwork)
 theme_set(theme_classic())
 
 add_CIs <- FALSE
+
+col_pal <- c("#588DB4", "#45802B", "#E29617")
+col_pal2 <- c("#B2B38A", "#9FC04D", "#E29617")
 
 # Read simulation results
 monitoring_params_df <- read.csv("parameters-monitoring-scenarios.csv")
@@ -85,10 +89,14 @@ results_plot <- results_summary %>%
 
 
 results_plot <- results_plot %>%
-    mutate(species = str_replace_all(species, "bycatch", "unwanted catch"),
-           species = str_replace_all(species, "Bycatch", "Unwanted catch")
-           ) %>%
-  mutate(species = factor(species, levels = c(setdiff(unique(species), "Rare unwanted catch species"), "Rare unwanted catch species")))
+#reorder species names for plotting
+  mutate(species = factor(species, levels = c(setdiff(unique(species), "Rare bycatch species"), "Rare bycatch species")))
+
+#Change species names for plotting
+    # mutate(species = str_replace_all(species, "bycatch", "unwanted catch"),
+          #  species = str_replace_all(species, "Bycatch", "Unwanted catch")
+          #  ) %>%
+  # mutate(species = factor(species, levels = c(setdiff(unique(species), "Rare unwanted catch species"), "Rare unwanted catch species")))
 
 max(results_plot$upper_ci_mean_bias_percent, na.rm = TRUE)
 min(results_plot$lower_ci_mean_bias_percent, na.rm = TRUE)
@@ -127,7 +135,7 @@ plot_sets <- ggplot(results_sets, aes(x = species, y = mean_bias_percent, color 
         title = "EM Scenario 1: 100% coverage with 20% random sets",
         x = "", y = "Percent Bias (%)", color = "Monitoring Scenario"
       ) +
-      scale_color_canva() +
+      scale_color_manual(values  = col_pal[1]) +
       scale_y_continuous(limits = yaxis_scale, breaks = seq(yaxis_scale[1], yaxis_scale[2], 20)) +
       theme(
         axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
@@ -162,6 +170,7 @@ plot_market_missed <- ggplot(results_sets, aes(x = species, y = mean_catch_misse
     x = "", y = "Mean Catch Missed", color = "Monitoring Scenario"
   ) +
   scale_color_canva() +
+  
   theme_classic() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
@@ -208,7 +217,10 @@ results_trips$mean_true_catch
 
 pd2 <- position_dodge(width = 0.5)
 
-mypal <- canva_pal("Fresh and bright")(3)[c(1,3,2)]
+# mypal <- canva_pal("Fresh and bright")(5)[c(1,3,2)]
+mypal <- col_pal
+# RColorBrewer::brewer.pal(3,name = "Dark2")
+
 
 plot_trips <- ggplot(results_trips) + 
   aes(x = species, y = mean_bias_percent, color = colour_scale,
@@ -300,7 +312,6 @@ results_vessels <- results_plot %>%
   )
 
 table(results_vessels$colour_scale)
-mypal <- canva_pal("Fresh and bright")(3)[c(1,3,2)]
 
 pd3 <- position_dodge(width = 0.5)
 plot_vessels <- ggplot(results_vessels) + 
@@ -407,12 +418,21 @@ combined_plot <- plot_sets + plot_trips + plot_vessels +
   )
 combined_plot
 # Save the plots
-ggsave("plots/plot_bias_percent_sets.png", plot = plot_sets,
-       width = 8, height = 9, dpi = 300)
-ggsave("plots/plot_bias_percent_trip.png", plot = plot_trips,
-       width = 8, height = 9, dpi = 300)
-ggsave("plots/plot_bias_percent_vessels.png", plot = plot_vessels,
-       width = 8, height = 9, dpi = 300)
+ggsave("plots/plot_bias_percent_sets-2025-10-16.png", plot = plot_sets,
+       width = 8, height = 9, dpi = 300, units = "in")
+ggsave("plots/plot_bias_percent_trip-2025-10-16.png", plot = plot_trips,
+       width = 8, height = 9, dpi = 300, units = "in")
+ggsave("plots/plot_bias_percent_vessels-2025-10-16.png", plot = plot_vessels,
+       width = 8, height = 9, dpi = 300, units = "in")
+
+ggsave("plots/plot_bias_percent_sets-2025-10-16.eps", plot = plot_sets,
+        width = 8, height = 9, dpi = 300, device = "eps", units = "in")
+ggsave("plots/plot_bias_percent_trip-2025-10-16.eps", plot = plot_trips,
+        width = 8, height = 9, dpi = 300, device = "eps", units = "in")
+ggsave("plots/plot_bias_percent_vessels-2025-10-16.eps", plot = plot_vessels,
+        width = 8, height = 9, dpi = 300, device = "eps", units = "in")
+
+
 
 # Create comprehensive table of catch missed numbers for all monitoring scenarios
 catch_missed_table <- results_summary %>%

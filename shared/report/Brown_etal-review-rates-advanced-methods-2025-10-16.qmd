@@ -1,0 +1,131 @@
+---
+title: "Appendix C: Advanced methods and transparency statement"
+description: |
+  Analysis of catch rate estimation with biased sampling strategies
+bibliography: references.bib
+output: word_document  
+editor: source
+---
+
+
+Simulation code are available at https://github.com/cbrown5/msc-review-rates
+
+
+We developed a general model for (1) simulating catch from a year's worth of fishing activity and (2) simulating monitoring and review of that fishing catch. The model was split into a catch event module that modelled catch per set (Table S1) and a monitoring module that modelled monitoring and review of a sub-sample of all sets (Table S2). Simulation of catch and allocation of monitoring effort were both stochastic. This allowed us to explore how different monitoring scenarios impacted bias in estimated catch rates, with realistic levels of uncertainty. Specifically, our models accounted for uncertainty in: how much fishing activity happens in the coming year, how much catch is taken and by which vessels and on which trips, how monitoring coverage is allocated to fishing activities, what parts of the monitoring data are reviewed (e.g. what video is turned into data sheets that we can estimate catch from) and bias in how monitoring coverage is allocated. These different sources of uncertainty were important because a plan for monitoring needs to be made before the fishing activity happens. With our model, we then simulated replicate years of fishing to obtain means for catch bias along with ranges of variability.
+
+For the catch model we simulated the number of trips per vessel and number of sets per trip, as well as catch per set. Trips per vessel and sets per trip were modelled as random numbers, to reflect real world variation in their numbers. For simplicity we did not consider correlations in the number of trips or sets per vessel (e.g. if some vessels consistently make fewer longer trips). This would require more detailed fisheries data for analysis than the summary statistics in published work. The number of vessels was fixed at 50. Catch per set was modelled as a random number with additive components for vessel identity and trip identity. This simulation of catches emulates the statistical analyses of catch, which often uses mixed effects models [e.g. @roberson2025opportunity; @gilman2012]. Therefore, catch events included covariation caused by vessel identity and trip identity.
+
+The monitoring scenarios were modelled by randomly sampling sets, trips or vessels for monitoring. A proportion of sets (20%) was then selected within this sub-sample for data review. For the trip and vessel scenarios, a bias parameter was included such that monitoring coverage was biased towards trips or vessels with lower than average catch rates. We considered three monitoring scenarios, as described in the main text. Note that the total sample size in terms of number of sets varied across scenarios. This choice was made so we could represent  coverage and review rates that are realistic to different real world interpretations of '20%' monitoring. 
+
+This division between coverage (e.g. what you collect video data for) and review (what you actually watch to get datasheets) is reflective of how real world fisheries operate. The total review quantity was also an average across multiple replicate simulations, because in an individual simulation the actual review rate depends on the fishing activity model, which had stochastic elements. Therefore, our model is realistic to a situation a manager faces where they can allocate observers and cameras to vessels or trips, but they do not know ahead of time how much fishing will happen on those trips and vessels.
+
+The random sampling of fishing activities and catch events was repeated to create 1000 datasets of annual fishing activities. Each monitoring scenario was then applied to each of the 1000 fishery datasets. The bias statistics were calculated as the difference between the true catch rate for that dataset and catch rate estimated by the monitoring scenario. The bias statistics therefore represent the difference between the estimated and true catch rates, conditional on each sample of catches. This conditional sampling is reflective of the situation managers face in the real world, where the observed catch rate differs from the true catch rate by an unknown amount. The confidence intervals across the 1000 simulations therefore represent our uncertainty about the accuracy of catch estimation in the coming year, given we know the number of vessels, but we don't yet know the number of trips, sets or catches those vessels will take.
+
+In addition to the scenarios described in the main report, we also ran two additional analyses to explore the impact of sample size on catch rate estimates. In the first of these we fixed the sample size for the number of sets reviewed across the set, vessel and trip scenarios. This allowed us to compare the impact of coverage rate and monitoring scenario for equal sample sizes of sets. In the second additional analysis we varied the review rate for a fixed coverage of 100%. This allowed us to look at how precision of catch estimates improves as the number of sets reviewed increased. 
+
+
+For a given monitoring scenario *M* (Table S2) and catch data *y*, the estimated catch rate per set can be calculated as the average catch per set that was monitored and reviewed:
+
+$$
+\hat{C} = \frac{\sum{(y_{v,t,s} * M_{v,t,s})}}{\sum{M_{v,t,s}}}
+$$
+
+Where $y_{v,t,s}$ is a matrix of catches and $M_{v,t,s}$ is a matrix of 0/1 that indicates whether a given set was monitored and reviewed.
+
+The true catch rate in each simulation, *C* was simply average catch per set.
+
+We calculated two bias statistics, the absolute bias:
+
+$$
+B = C - \hat{C}
+$$
+
+and the bias as a percentage of the catch rate:
+
+$$
+100 * B / C
+$$
+
+The percent bias is what we present above, because it puts all scenarios on the same scale. The absolute bias was much smaller for rarer species and therefore hard to visualize in comparisons.
+
+All parameters were chosen to be representative of the Western Pacific longline tuna fleets, data given in @brown2021electronic, parameters are in Tables S3-s5. The analysis was performed with the R program [@Rprogram]. The code are available online at <https://github.com/cbrown5/msc-review-rates>.
+
+**Table S1** Model Equations and parameters of the catch event module
+
+| Equation | Description | Parameters |
+|---------------------|---------------------------|-------------------------|
+| $T_{v} \sim dnegbin(\mu^{trips}, \theta^{trips})$ | Number of trips per vessel per year | $\mu^{trips}$: mean number of trips per year, $\theta^{trips}$: dispersion in trips per year |
+| $x_{v} \sim dnorm(0, \sigma^{x})$ | Vessel-level random effect for catches per set | $\sigma^{x}$: vessel effect standard deviation |
+| $S_{v,t} \sim dnegbin(\mu^{sets}, \theta^{sets})$ | Number of sets per trip | $\mu^{sets}$: mean sets per trip, $\theta^{sets}$: dispersion in sets per trip |
+| $z_{v,t} \sim dnorm(0, \sigma^z)$ | Trip-level random effect for catches | $\sigma^z$: trip effect standard deviation |
+| $\mu_{v,t} = exp(\beta_{0} + z_{v,t} + x_{v})$ | Expected catch rate per set for a given trip | $\beta_{0}$: baseline catch rate per set |
+| $y_{v,t,s} \sim dnegbin(\mu_{v,t}, \theta^{catch})$ | Catch per set | $\theta^{catch}$: catch dispersion |
+
+*Notes:*\
+- $V$: Number of vessels\
+- $T_{v}$: Number of trips for vessel $v$\
+- $S_{v,t}$: Number of sets for trip $t$ of vessel $v$\
+- $x_{v}$: Vessel random effect\
+- $z_{v,t}$: Trip random effect\
+- $\mu_{v,t}$: Expected catch rate for trip $t$ of vessel $v$\
+- $y_{v,t,s}$: Catch for set $s$ on trip $t$ of vessel $v$
+
+**Table S2** Model Equations and parameters of the monitoring module
+
+| Equation | Description | Parameters |
+|---------------------|---------------------------|-------------------------|
+| $\phi = \text{logit}(p_{review})$ | Logit of review probability per set | $p$: proportion of sets reviewed (e.g., 0.2). Applied to a sub-sample of sets that are monitored. |
+| $\phi_v = \text{logit}(p_{cover})$ | Logit of base monitoring probability per vessel. Likewise for trips. | $p_{cover}$: Proportion of vessels/trips that are covered by monitoring. |
+| $M_{v,t,s} \sim \text{Bernoulli}(p_{review})$ | Monitoring indicator for random sampling across sets within the vessels/trips/sets with monitoring coverage | $M_{v,t,s}$: 1 if set monitored, 0 otherwise |
+| $\phi_{v} = \text{logit}(p_{cover}) + \text{bias}_{vessels} \cdot x_v$ | Logit of monitoring probability for vessel-based sampling, with bias | $\text{bias}_{vessels}$: vessel bias factor, $x_v$: vessel random effect |
+| $V_{v} \sim \text{Bernoulli}(\text{logit}^{-1}(\phi_{v}))$ | Monitoring indicator for vessel-based sampling | $V_{v}$: 1 if vessel monitored, 0 otherwise |
+| $\phi_{t} = \text{logit}(p_{cover}) + \text{bias}_{trip} \cdot z_{v,t}$ | Logit of monitoring probability for trip-based sampling, with bias | $\text{bias}_{trip}$: trip bias factor, $z_{v,t}$: trip random effect |
+| $T_{t} \sim \text{Bernoulli}(\text{logit}^{-1}(\phi_{t}))$ | Monitoring indicator for trip-based sampling | $T_{t}$: 1 if trip monitored, 0 otherwise |
+
+*Notes:*\
+- $M_{v,t,s}$: Monitoring indicator for set $s$ on trip $t$ of vessel $v$ (1 = monitored, 0 = not monitored)\
+- $p_{cover}$: Proportion of sets to be monitoring coverage
+
+\- $p_{review}$: Proportion of sets to be reviewed for data.\
+- $\text{bias}_{vessels}$, $\text{bias}_{trip}$: Bias factors for vessel/trip selection (higher values = stronger bias towards lower catch rates)\
+- $x_v$: Vessel-level random effect (from catch model)\
+- $z_{v,t}$: Trip-level random effect (from catch model)
+
+**Table S3** Fixed parameter values. Fleet specific parameters was based on values from @brown2021electronic.
+
+| Parameter | Value | Description |
+|-----------------------|-------------------|------------------------------|
+| V | 50 | Number of vessels in the simulated fleet, representative of medium-sized longline fleet |
+| μ^trips^ | 10 | Mean number of trips per vessel per year, based on typical longline operations |
+| θ^trips^ | 1.13 | Dispersion parameter for trips per vessel, allows realistic variation in fishing effort |
+| μ^sets^ | 26 | Mean number of sets per trip, typical for longline tuna fishing |
+| θ^sets^ | 1.8 | Dispersion parameter for sets per trip, reflects operational variation |
+| θ^catch^ | 0.42 | Catch dispersion parameter, controls overdispersion in catch counts |
+| $p_{cover}$ | 0.2/0.3 | Proportion of sets covered by monitoring (e.g. 20%, 30%), as specified by MSC requirements |
+| $p_{review}$ | 0.2/1.0 | Proportion of sets that are reviewed for data within those that are monitored. |
+
+**Table S4** Parameters for monitoring scenarios.
+
+| Monitoring Set | Description | Coverage rate (p_monitor) | Vessel Bias (bias_v) | Trip Bias (bias_factor) | Sets Selection Rate (p_sets_select) |
+|---------------|---------------|---------------|---------------|---------------|---------------|
+| 1 | Baseline | 1.0 (100%) | 0 | 0 | 0.2 (20%) |
+| 2 | Vessel bias | 1.0 (100%) | -2 | 0 | 0.2 (20%) |
+| 3 | Trip bias | 1.0 (100%) | 0 | -2 | 0.2 (20%) |
+| 4 | Baseline 20% | 0.2 (20%) | 0 | 0 | 0.2 (20%) |
+| 5 | Vessel bias 20% | 0.2 (20%) | -2 | 0 | 0.2 (20%) |
+| 6 | Trip bias 20% | 0.2 (20%) | 0 | -2 | 0.2 (20%) |
+| 7 | Baseline 75% | 0.2 (20%) | 0 | 0 | 0.75 (75%) |
+| 8 | Vessel bias 75% | 0.2 (20%) | -2 | 0 | 0.75 (75%) |
+| 9 | Trip bias 75% | 0.2 (20%) | 0 | -2 | 0.75 (75%) |
+
+**Table S5** Species-specific parameter values for catch simulations.
+
+| Species Set | Species Type                          | β₀    | σˣ   | σᶻ   | θ^catch^ |
+|------------|------------|------------|------------|------------|------------|
+| 1           | Market species                        | 1.7   | 0.41 | 0.67 | 0.42     |
+| 2           | Market species + high vessel variance | 1.7   | 0.82 | 0.67 | 0.42     |
+| 3           | Market species + high trip variance   | 1.7   | 0.41 | 1.3  | 0.42     |
+| 4           | Unwanted catch species                       | -2.52 | 0.55 | 0.65 | 0.42     |
+| 5           | Rare unwanted catch species                  | -4.9  | 0.55 | 0.65 | 0.42     |
+
+## References

@@ -5,7 +5,7 @@
 # Load necessary libraries
 library(ggplot2)
 library(dplyr)
-library(patchwork) # for combining plots
+library(patchwork) # for combining plotsusethis::edit_r_profile()
 library(tidyr)
 
 # Set seed for reproducibility
