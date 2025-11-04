@@ -3,14 +3,14 @@
 
 ### Scientific Context
 
-The Marine Stewardship Council (MSC) requires fisheries to monitor fishing effort with a nominal 30% monitoring coverage rule. However, they haven't specified how that 30% should be distributed across the fleet. There's concern that fishing fleets may select their best 30% of vessels (those with low rates of bycatch) for monitoring, resulting in biased outcomes in terms of estimated bycatch rates versus actual rates.
+Fisheries monitoring policies often specify a monitoring coverage rule, such as requiring 20% of the fleet be covered by electronic monitoring. However, these policies may not specify how that 20% should be distributed across the fleet. There's concern that fishing fleets may select their best 20% of vessels (those with low rates of bycatch) for monitoring, resulting in biased outcomes in terms of estimated bycatch rates versus actual rates.
 
-The aim is to illustrate how different sampling strategies for monitoring tuna fisheries affects the estimated rates of catch and the ability to detect compliance events (false negative rates). We want to determine the optimal monitoring approach for accurate bycatch rates and compliance detection, which is likely to be 30% random allocation across all sets rather than structuring by trips or vessels.
+The aim here is to illustrate how different sampling strategies for monitoring tuna fisheries affects the estimated rates of catch and the ability to detect compliance events (false negative rates). We want to determine the optimal monitoring approach for accurate bycatch rates and compliance detection.
 
 Different monitoring systems have different capabilities:
-- Electronic monitoring: Can potentially achieve 100% vessel coverage with random review of 30% of sets
-- Electronic monitoring: in practice there is less than 100% coverage, so gaming may occur where the 'best' 30% of vessels are picked to have cameras
-- Human observation: Typically covers whole trips (30% of trips) but is subject to potential gaming where vessels may select shorter trips or those with lower catch rates
+- Electronic monitoring: Can potentially achieve 100% vessel coverage with random review of 20% of sets
+- Electronic monitoring: in practice there is less than 100% coverage, so gaming may occur where the 'best' 20% of vessels are picked to have cameras
+- Human observation: Typically covers most of each trips but is subject to potential gaming where vessels may make shorter trips if they have observers or target areas with lower bycatch rates. 
 
 ### Model Formulation
 
@@ -22,9 +22,6 @@ All code created in the R programming language. Code written by Chris Brown with
 #### Parameter calculations 
 
 Parameters were calculated from a longline tuna fleet. Note that below I assume sets per trip are negative binomially distributed. However data indicated an unusual peaked distribution with high dispersion. 
-
-See `tuna-bycatch-study/fleet-parameters-msc-analysis.R` for calculation of parameters from real data. 
-Note that the distribution of sets per trip is odd, more peaked than a negbin, but also with long tails. Using negbin for now. 
 
 #### Catch event module 
 
@@ -115,7 +112,7 @@ M_trips[v,t,s] ~ dbern(inverse_logit(phi_trips[v,t,s]))
 
 **Parameter Explanations:**
 - `M_sets`, `M_vessels`, `M_trips`: Matrices indicating monitoring status for each set under different strategies (1 = monitored, 0 = not monitored)
-- `p_monitor`: Base proportion of sets to be monitored (e.g., 0.3 for 30% coverage)
+- `p_monitor`: Base proportion of sets to be monitored (e.g., 0.3 for 20% coverage)
 - `p_sets_select`: Proportion of sets to select within each monitored vessel or trip (e.g., 0.2 to select 20% of sets within monitored units)
 - `phi_sets`, `phi_vessels`, `phi_trips`: Logit-transformed probabilities of monitoring for each strategy
 - `bias_v`: Bias factor for vessel-based selection (when > 0, vessels with lower catch rates are more likely selected)
@@ -191,12 +188,12 @@ Note we also drafted a report, however this draft was finalized on another platf
    - Generates the primary plots showing bias in catch rate estimation across different monitoring strategies and saves them to the `/plots/` directory.
 
 4. **`3_plots-20vs30percent.R`**
-   - **Purpose**: Creates comparative visualizations between 20% and 30% monitoring coverage
+   - **Purpose**: Creates comparative visualizations between 20% and 20% monitoring coverage
    - **Usage**:
      ```bash
      Rscript 3_plots-20vs30percent.R
      ```
-   - Generates plots comparing the performance of different monitoring strategies at 20% vs 30% coverage levels.
+   - Generates plots comparing the performance of different monitoring strategies at 20% vs 20% coverage levels.
 
 5. **`3_plots-30_sub-sampled.R`**
    - **Purpose**: Creates visualizations comparing full monitoring vs sub-sampled monitoring within vessels/trips
@@ -204,7 +201,7 @@ Note we also drafted a report, however this draft was finalized on another platf
      ```bash
      Rscript 3_plots-30_sub-sampled.R
      ```
-   - Compares scenarios with all sets monitored on 30% of vessels/trips vs 50% of sets monitored on 60% of vessels/trips.
+   - Compares scenarios with all sets monitored on 20% of vessels/trips vs 50% of sets monitored on 60% of vessels/trips.
 
 6. **`simulation_functions.R`**
    - **Purpose**: Core functions for the simulation model
