@@ -432,9 +432,72 @@ ggsave("plots/plot_bias_percent_trip-2025-10-16.eps", plot = plot_trips,
 ggsave("plots/plot_bias_percent_vessels-2025-10-16.eps", plot = plot_vessels,
         width = 8, height = 9, dpi = 300, device = "eps", units = "in")
 
+#
+# Plot of means for the conceptual figure
+#
+
+results_barplot <- results_plot %>% 
+  filter(species == "Market species") %>%
+  mutate(
+    strategy_description = (paste(strategy, description, sep = " - "))
+  ) %>%
+  filter(strategy_description %in% 
+    c("sets - Random sets", "vessels - Vessel bias 20%", "trips - Trip bias 75%")
+      ) %>% 
+  mutate(strategy_description = factor(strategy_description, labels = c(
+    "Sets", "Trips", "Vessels"
+  ))) %>% 
+  select(strategy_description, mean_true_rate, mean_estimated_rate, mean_bias_percent) %>%
+  pivot_longer(cols = c(mean_true_rate, mean_estimated_rate, mean_bias_percent),
+               names_to = "rate_type",
+               values_to = "rate_value")
+
+  barplot1 <- results_barplot %>%
+  filter(rate_type %in% c("mean_true_rate", "mean_estimated_rate")) %>%
+  ggplot() +
+  aes(x = strategy_description, y = rate_value, fill = rate_type) +
+    geom_bar(stat = "identity", position = position_dodge()) +
+    scale_fill_manual(values = col_pal[1:2],
+                     name = "Catch Rate",
+                     labels = c("Estimated", "True")) + 
+    labs(title = "",
+         x = "", 
+         y = "Catch Rate") +
+  theme_classic() + 
+    theme(legend.position = "bottom")+ 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+barplot1                     
+
+barplot2 <- results_barplot %>%
+  filter(rate_type == "mean_bias_percent") %>%
+  ggplot() +
+  aes(x = strategy_description, y = rate_value, fill = rate_type) +
+    geom_bar(stat = "identity", position = position_dodge(), fill = col_pal[1]) +
+    labs(title = "",
+         x = "", 
+         y = "Percent Bias (%)") +
+    theme(legend.position = "none")+ 
+    theme_classic() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "grey")
+barplot2
 
 
+ggsave("plots/plot_barplot_conceptual-catch-rate-2025-10-16.png", plot = barplot1,
+       width = 3, height = 4, dpi = 300)
+ggsave("plots/plot_barplot_conceptual-bias-2025-10-16.png", plot = barplot2,
+       width = 3, height = 4, dpi = 300)
+
+ggsave("plots/plot_barplot_conceptual-catch-rate-2025-10-16.eps", plot = barplot1,
+       width = 3, height = 4)
+ggsave("plots/plot_barplot_conceptual-bias-2025-10-16.eps", plot = barplot2,
+       width = 3, height = 4)
+
+# ---------------------------------------------------------------------------
+
+#
 # Create comprehensive table of catch missed numbers for all monitoring scenarios
+#
 catch_missed_table <- results_summary %>%
   inner_join(spp_scnrs_to_plot) %>%
   mutate(description = case_when(

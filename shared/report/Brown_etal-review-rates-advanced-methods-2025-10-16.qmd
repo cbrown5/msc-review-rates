@@ -5,6 +5,7 @@ description: |
 bibliography: references.bib
 output: word_document  
 editor: source
+html-math-method: webtex
 ---
 
 
